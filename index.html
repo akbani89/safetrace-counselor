@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeTrace — Counselor Chat</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f8;height:100vh;display:flex;flex-direction:column}
+
+/* Login */
+.login-wrap{display:flex;align-items:center;justify-content:center;height:100vh;background:linear-gradient(135deg,#1a237e,#3949ab)}
+.login-card{background:#fff;border-radius:20px;padding:40px;width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.login-card h1{font-size:22px;font-weight:700;margin-bottom:4px;color:#1a237e}
+.login-card .sub{font-size:13px;color:#9090a8;margin-bottom:28px}
+.login-card label{font-size:12px;font-weight:600;color:#6b6b8a;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.login-card input, .login-card select{width:100%;padding:12px 14px;border:1.5px solid #e8e8f0;border-radius:10px;font-size:14px;margin-bottom:16px;outline:none;color:#1a1a2e}
+.login-card input:focus, .login-card select:focus{border-color:#1a237e}
+.login-card button{width:100%;padding:14px;background:#1a237e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+.login-card button:hover{background:#3949ab}
+.login-err{color:#c62828;font-size:12px;margin-top:8px;display:none;text-align:center}
+
+/* App Layout */
+.app{display:none;height:100vh;flex-direction:row}
+.app.show{display:flex}
+
+/* Sidebar */
+.sidebar{width:300px;background:#fff;border-right:1px solid #e8e8f0;display:flex;flex-direction:column;flex-shrink:0}
+.sb-header{padding:18px 20px;background:#1a237e;color:#fff}
+.sb-header h2{font-size:16px;font-weight:700}
+.sb-header p{font-size:11px;opacity:0.75;margin-top:2px}
+.sb-role{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;margin-top:8px;font-weight:600}
+.role-counselor{background:rgba(255,255,255,0.2);color:#fff}
+.role-legal{background:rgba(255,200,0,0.3);color:#fff}
+
+.sb-search{padding:12px 16px;border-bottom:1px solid #f0f0f8}
+.sb-search input{width:100%;padding:8px 12px;border:1px solid #e8e8f0;border-radius:8px;font-size:13px;outline:none;background:#f8f8fc}
+.sb-search input:focus{border-color:#1a237e}
+
+.conv-list{flex:1;overflow-y:auto}
+.conv-item{padding:14px 18px;border-bottom:1px solid #f5f5f8;cursor:pointer;transition:background 0.1s}
+.conv-item:hover{background:#f8f8fc}
+.conv-item.active{background:#eef0ff;border-left:3px solid #1a237e}
+.conv-item.unread .conv-name{font-weight:700}
+.conv-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.conv-name{font-size:13px;font-weight:500;color:#1a1a2e}
+.conv-time{font-size:10px;color:#b0b0c8}
+.conv-preview{font-size:12px;color:#9090a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-meta{display:flex;gap:6px;margin-top:6px;align-items:center}
+.conv-badge{font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600}
+.badge-counselor{background:#e8eaf6;color:#1a237e}
+.badge-legal{background:#fff8e1;color:#f57f17}
+.unread-dot{width:8px;height:8px;background:#c62828;border-radius:50%;margin-left:auto;flex-shrink:0}
+
+.sb-footer{padding:14px 18px;border-top:1px solid #f0f0f8;display:flex;align-items:center;gap:10px}
+.sb-avatar{width:36px;height:36px;background:#1a237e;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0}
+.sb-user-info{flex:1;min-width:0}
+.sb-user-name{font-size:13px;font-weight:600;color:#1a1a2e}
+.sb-user-role{font-size:11px;color:#9090a8}
+.sb-logout{font-size:11px;color:#c62828;cursor:pointer}
+
+/* Chat area */
+.chat-area{flex:1;display:flex;flex-direction:column;background:#f8f8fc}
+.chat-header{padding:16px 20px;background:#fff;border-bottom:1px solid #e8e8f0;display:flex;align-items:center;gap:14px}
+.chat-header-info{flex:1}
+.chat-header-name{font-size:15px;font-weight:700;color:#1a1a2e}
+.chat-header-meta{font-size:12px;color:#9090a8;margin-top:2px}
+.chat-header-actions{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid #e0e0e0;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;background:#fff;color:#1a1a2e}
+.btn:hover{background:#f5f5f5}
+.btn-primary{background:#1a237e;color:#fff;border-color:#1a237e}
+.btn-primary:hover{background:#3949ab}
+
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+.msg-group{display:flex;flex-direction:column;gap:4px}
+.msg-group.user{align-items:flex-start}
+.msg-group.me{align-items:flex-end}
+.msg-sender{font-size:10px;color:#9090a8;margin-bottom:2px;padding:0 4px}
+.bubble{max-width:72%;padding:11px 16px;border-radius:16px;font-size:14px;line-height:1.5;word-break:break-word}
+.bubble.user{background:#fff;color:#1a1a2e;border-radius:4px 16px 16px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.bubble.me{background:#1a237e;color:#fff;border-radius:16px 4px 16px 16px}
+.msg-time{font-size:10px;color:#c0c0d0;padding:0 4px}
+
+.no-chat{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#9090a8}
+.no-chat-icon{font-size:48px}
+.no-chat-text{font-size:15px;font-weight:500}
+.no-chat-sub{font-size:13px}
+
+.chat-input-area{padding:16px 20px;background:#fff;border-top:1px solid #e8e8f0}
+.chat-input-row{display:flex;gap:10px;align-items:flex-end}
+.chat-input-wrap{flex:1;background:#f5f5f8;border-radius:12px;border:1.5px solid #e8e8f0;overflow:hidden;transition:border-color 0.15s}
+.chat-input-wrap:focus-within{border-color:#1a237e}
+textarea{width:100%;padding:12px 16px;font-size:14px;border:none;outline:none;background:transparent;resize:none;font-family:inherit;line-height:1.5;max-height:120px}
+.send-btn{width:46px;height:46px;background:#1a237e;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s}
+.send-btn:hover{background:#3949ab}
+.send-btn:disabled{background:#b0b8d8;cursor:not-allowed}
+.send-btn svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.typing-indicator{font-size:11px;color:#9090a8;padding:4px 0;min-height:18px}
+.disclaimer{font-size:11px;color:#b0b0c8;text-align:center;padding:8px 0 0}
+
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:30px;color:#9090a8;font-size:13px}
+.spinner{width:20px;height:20px;border:2px solid #e0e0e0;border-top-color:#1a237e;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#dde;border-radius:2px}
+
+/* Empty list */
+.empty-list{text-align:center;padding:40px 20px;color:#9090a8;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <h1>🛡 SafeTrace</h1>
+    <div class="sub">Counselor & Legal Support Chat</div>
+
+    <label>Your Name</label>
+    <input type="text" id="counselorName" placeholder="e.g. Dr. Fatima" />
+
+    <label>Role</label>
+    <select id="counselorRole">
+      <option value="counselor">💙 Counselor — Emotional Support</option>
+      <option value="legal">⚖️ Legal Advisor — Legal Guidance</option>
+    </select>
+
+    <label>API URL</label>
+    <input type="url" id="apiUrl" value="https://safetrace-backend.fly.dev" />
+
+    <label>Access Code</label>
+    <input type="password" id="accessCode" placeholder="Enter your access code" />
+
+    <button onclick="doLogin()">Enter Chat Panel</button>
+    <p class="login-err" id="loginErr">Incorrect access code.</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sb-header">
+      <h2>🛡 SafeTrace</h2>
+      <p>Support Chat Panel</p>
+      <span class="sb-role role-counselor" id="roleLabel">Counselor</span>
+    </div>
+
+    <div class="sb-search">
+      <input type="text" placeholder="Search cases..." oninput="filterConvs(this.value)" />
+    </div>
+
+    <div class="conv-list" id="convList">
+      <div class="loading"><div class="spinner"></div>Loading chats...</div>
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-avatar" id="sbAvatar">?</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name" id="sbName">Counselor</div>
+        <div class="sb-user-role" id="sbRole">Support Team</div>
+      </div>
+      <span class="sb-logout" onclick="doLogout()">Sign out</span>
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <div class="chat-area" id="chatArea">
+    <div class="no-chat" id="noChat">
+      <div class="no-chat-icon">💬</div>
+      <div class="no-chat-text">Select a conversation</div>
+      <div class="no-chat-sub">Choose a case from the left to start chatting</div>
+    </div>
+
+    <div id="activeChatWrap" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+      <div class="chat-header">
+        <div style="width:40px;height:40px;background:#e8eaf6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
+        <div class="chat-header-info">
+          <div class="chat-header-name" id="chatCaseTitle">—</div>
+          <div class="chat-header-meta" id="chatCaseMeta">—</div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="btn" onclick="refreshMessages()">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="chat-input-area">
+        <div class="typing-indicator" id="typingIndicator"></div>
+        <div class="chat-input-row">
+          <div class="chat-input-wrap">
+            <textarea id="msgInput" placeholder="Type your message..." rows="1"
+              oninput="autoResize(this)"
+              onkeydown="handleKey(event)"></textarea>
+          </div>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+        <div class="disclaimer">🔒 All messages are anonymous. Do not share personal details about users externally.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ACCESS_CODE = 'SafeTrace-Support-2024';
+let API = 'https://safetrace-backend.fly.dev';
+let ME = { name:'', role:'counselor', token:null };
+let CASES = [];
+let ACTIVE_CASE = null;
+let WS = null;
+let POLL_TIMER = null;
+
+function doLogin() {
+  const name = document.getElementById('counselorName').value.trim();
+  const role = document.getElementById('counselorRole').value;
+  const url = document.getElementById('apiUrl').value.trim().replace(/\/+$/,'');
+  const code = document.getElementById('accessCode').value;
+
+  if (!name) { alert('Please enter your name'); return; }
+  if (code !== ACCESS_CODE) {
+    document.getElementById('loginErr').style.display = 'block';
+    setTimeout(() => document.getElementById('loginErr').style.display = 'none', 3000);
+    return;
+  }
+
+  API = url;
+  ME.name = name;
+  ME.role = role;
+
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('sbName').textContent = name;
+  document.getElementById('sbRole').textContent = role === 'counselor' ? '💙 Counselor' : '⚖️ Legal Advisor';
+  document.getElementById('sbAvatar').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('roleLabel').textContent = role === 'counselor' ? '💙 Counselor' : '⚖️ Legal Advisor';
+
+  bootstrap();
+}
+
+function doLogout() {
+  clearInterval(POLL_TIMER);
+  if (WS) WS.close();
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('loginWrap').style.display = 'flex';
+  CASES = []; ACTIVE_CASE = null; ME.token = null;
+}
+
+async function bootstrap() {
+  await getToken();
+  await loadConversations();
+  // Poll every 30s for new messages
+  POLL_TIMER = setInterval(loadConversations, 30000);
+}
+
+async function getToken() {
+  try {
+    const r = await fetch(API + '/api/v1/identity/create', { method: 'POST' });
+    const d = await r.json();
+    ME.token = d.access_token;
+  } catch(e) { console.warn('Token error', e); }
+}
+
+async function apiFetch(path, opts={}) {
+  const headers = { 'Content-Type': 'application/json', ...(ME.token ? { Authorization: 'Bearer ' + ME.token } : {}) };
+  const r = await fetch(API + '/api/v1' + path, { ...opts, headers });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+async function loadConversations() {
+  const el = document.getElementById('convList');
+  try {
+    const d = await apiFetch('/cases/');
+    CASES = d.cases || [];
+
+    // Load chat history for each case to find ones with messages
+    const convs = [];
+    for (const c of CASES) {
+      try {
+        const h = await apiFetch('/chat/history/' + c.case_id + '?chat_type=' + ME.role);
+        const msgs = h.messages || [];
+        convs.push({ ...c, messages: msgs, lastMsg: msgs[msgs.length-1] || null });
+      } catch(_) {
+        convs.push({ ...c, messages: [], lastMsg: null });
+      }
+    }
+
+    // Sort: cases with messages first, then by last message time
+    convs.sort((a,b) => {
+      if (a.messages.length && !b.messages.length) return -1;
+      if (!a.messages.length && b.messages.length) return 1;
+      if (a.lastMsg && b.lastMsg) return new Date(b.lastMsg.timestamp) - new Date(a.lastMsg.timestamp);
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    renderConvList(convs);
+
+    // If active case, refresh messages
+    if (ACTIVE_CASE) {
+      const updated = convs.find(c => c.case_id === ACTIVE_CASE.case_id);
+      if (updated) {
+        ACTIVE_CASE = updated;
+        renderMessages(updated.messages);
+      }
+    }
+  } catch(e) {
+    el.innerHTML = '<div class="empty-list">Could not load cases.<br>Check backend connection.</div>';
+  }
+}
+
+function renderConvList(convs) {
+  const el = document.getElementById('convList');
+  if (!convs.length) { el.innerHTML = '<div class="empty-list">No cases yet</div>'; return; }
+
+  el.innerHTML = convs.map(c => {
+    const hasMsg = c.messages.length > 0;
+    const lastMsg = c.lastMsg;
+    const isActive = ACTIVE_CASE && ACTIVE_CASE.case_id === c.case_id;
+    const hasUserMsg = c.messages.some(m => m.sender_type === 'user');
+    const hasMyReply = c.messages.some(m => m.sender_type !== 'user');
+    const needsReply = hasUserMsg && !hasMyReply;
+
+    return `<div class="conv-item ${isActive ? 'active' : ''} ${needsReply ? 'unread' : ''}"
+      onclick="openChat(${JSON.stringify(JSON.stringify(c))})">
+      <div class="conv-header">
+        <span class="conv-name">${c.title || 'Untitled case'}</span>
+        <span class="conv-time">${lastMsg ? fd(lastMsg.timestamp) : fd(c.created_at)}</span>
+      </div>
+      <div class="conv-preview">${lastMsg ? lastMsg.content.substring(0,55)+'...' : 'No messages yet — say hello'}</div>
+      <div class="conv-meta">
+        <span class="conv-badge badge-${ME.role === 'counselor' ? 'counselor' : 'legal'}">${c.category}</span>
+        <span style="font-size:10px;color:#9090a8">${c.incident_count} incidents</span>
+        ${needsReply ? '<span class="unread-dot"></span>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterConvs(q) {
+  const items = document.querySelectorAll('.conv-item');
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = text.includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function openChat(caseJson) {
+  const c = JSON.parse(caseJson);
+  ACTIVE_CASE = c;
+
+  document.getElementById('noChat').style.display = 'none';
+  const wrap = document.getElementById('activeChatWrap');
+  wrap.style.display = 'flex';
+  wrap.style.flex = '1';
+  wrap.style.overflow = 'hidden';
+  wrap.style.flexDirection = 'column';
+
+  document.getElementById('chatCaseTitle').textContent = c.title || 'Untitled Case';
+  document.getElementById('chatCaseMeta').textContent =
+    `${c.case_id} · ${c.category} · ${c.incident_count} incidents · ${ME.role} chat`;
+
+  // Mark active in list
+  document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
+  event && event.currentTarget && event.currentTarget.classList && event.currentTarget.classList.add('active');
+
+  loadMessages(c.case_id);
+}
+
+async function loadMessages(caseId) {
+  try {
+    const d = await apiFetch('/chat/history/' + caseId + '?chat_type=' + ME.role);
+    renderMessages(d.messages || []);
+  } catch(e) {
+    document.getElementById('messages').innerHTML = '<div class="loading">Could not load messages</div>';
+  }
+}
+
+function renderMessages(msgs) {
+  const el = document.getElementById('messages');
+  if (!msgs.length) {
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:#9090a8">
+      <div style="font-size:32px;margin-bottom:12px">👋</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px">No messages yet</div>
+      <div style="font-size:12px">Send a greeting to start the conversation</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = msgs.map(m => {
+    const isMe = m.sender_type !== 'user';
+    return `<div class="msg-group ${isMe ? 'me' : 'user'}">
+      <div class="msg-sender">${isMe ? ME.name : 'Anonymous User'}</div>
+      <div class="bubble ${isMe ? 'me' : 'user'}">${escHtml(m.content)}</div>
+      <div class="msg-time">${fd(m.timestamp)}</div>
+    </div>`;
+  }).join('');
+
+  // Scroll to bottom
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const content = input.value.trim();
+  if (!content || !ACTIVE_CASE) return;
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+
+  try {
+    // Use WebSocket if connected, otherwise HTTP fallback via a new temp user token
+    // For now POST via the chat history endpoint indirectly using WS
+    await sendViaWS(content);
+    input.value = '';
+    input.style.height = 'auto';
+    await loadMessages(ACTIVE_CASE.case_id);
+  } catch(e) {
+    alert('Could not send message. Please try again.');
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
+}
+
+async function sendViaWS(content) {
+  // Create WebSocket connection for this message
+  return new Promise((resolve, reject) => {
+    const wsUrl = API.replace('https://', 'wss://').replace('http://', 'ws://');
+    const ws = new WebSocket(
+      `${wsUrl}/api/v1/chat/ws/${ACTIVE_CASE.case_id}/${ME.role}?token=${ME.token}`
+    );
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'message', content }));
+    };
+
+    ws.onmessage = (e) => {
+      ws.close();
+      resolve();
+    };
+
+    ws.onerror = () => { ws.close(); reject(new Error('WS error')); };
+
+    // Timeout
+    setTimeout(() => { ws.close(); resolve(); }, 3000);
+  });
+}
+
+function refreshMessages() {
+  if (ACTIVE_CASE) loadMessages(ACTIVE_CASE.case_id);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function fd(s) {
+  if (!s) return '—';
+  try {
+    const d = new Date(s);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+    if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+    return d.toLocaleDateString('en-PK',{month:'short',day:'numeric'});
+  } catch(_) { return s; }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginWrap').style.display !== 'none') doLogin();
+});
+</script>
+</body>
+</html>
