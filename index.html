@@ -3,100 +3,185 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SafeTrace — Counselor Chat</title>
+<title>SafeTrace — Support Panel</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f8;height:100vh;display:flex;flex-direction:column}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f8;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* Login */
 .login-wrap{display:flex;align-items:center;justify-content:center;height:100vh;background:linear-gradient(135deg,#1a237e,#3949ab)}
 .login-card{background:#fff;border-radius:20px;padding:40px;width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
 .login-card h1{font-size:22px;font-weight:700;margin-bottom:4px;color:#1a237e}
 .login-card .sub{font-size:13px;color:#9090a8;margin-bottom:28px}
-.login-card label{font-size:12px;font-weight:600;color:#6b6b8a;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
-.login-card input,.login-card select{width:100%;padding:12px 14px;border:1.5px solid #e8e8f0;border-radius:10px;font-size:14px;margin-bottom:16px;outline:none;color:#1a1a2e}
+label{font-size:12px;font-weight:600;color:#6b6b8a;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.login-card input,.login-card select{width:100%;padding:12px 14px;border:1.5px solid #e8e8f0;border-radius:10px;font-size:14px;margin-bottom:16px;outline:none;color:#1a1a2e;background:#fff}
 .login-card input:focus,.login-card select:focus{border-color:#1a237e}
-.login-card button{width:100%;padding:14px;background:#1a237e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+.login-card button{width:100%;padding:14px;background:#1a237e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
 .login-card button:hover{background:#3949ab}
-.login-err{color:#c62828;font-size:12px;margin-top:8px;display:none;text-align:center}
-.app{display:none;height:100vh;flex-direction:row}
+.login-err{color:#c62828;font-size:12px;margin-top:10px;display:none;text-align:center}
+
+/* Layout */
+.app{display:none;height:100vh;flex-direction:row;overflow:hidden}
 .app.show{display:flex}
-.sidebar{width:300px;background:#fff;border-right:1px solid #e8e8f0;display:flex;flex-direction:column;flex-shrink:0}
-.sb-header{padding:18px 20px;background:#1a237e;color:#fff}
-.sb-header h2{font-size:16px;font-weight:700}
-.sb-header p{font-size:11px;opacity:0.75;margin-top:2px}
-.sb-role{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;margin-top:8px;font-weight:600;background:rgba(255,255,255,0.2);color:#fff}
-.sb-search{padding:12px 16px;border-bottom:1px solid #f0f0f8;display:flex;gap:8px;align-items:center}
-.sb-search input{flex:1;padding:8px 12px;border:1px solid #e8e8f0;border-radius:8px;font-size:13px;outline:none;background:#f8f8fc}
+
+/* Sidebar */
+.sidebar{width:300px;background:#fff;border-right:1px solid #e8e8f0;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.sb-header{padding:16px 18px;background:#1a237e;color:#fff;flex-shrink:0}
+.sb-header h2{font-size:15px;font-weight:700}
+.sb-header p{font-size:11px;opacity:0.7;margin-top:1px}
+.sb-me{display:flex;align-items:center;gap:8px;margin-top:10px;background:rgba(255,255,255,0.12);border-radius:8px;padding:6px 10px}
+.sb-me-avatar{width:28px;height:28px;background:rgba(255,255,255,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.sb-me-info{flex:1;min-width:0}
+.sb-me-name{font-size:12px;font-weight:600;color:#fff}
+.sb-me-role{font-size:10px;color:rgba(255,255,255,0.7)}
+.sb-logout{font-size:11px;color:rgba(255,255,255,0.6);cursor:pointer;flex-shrink:0}
+.sb-logout:hover{color:#fff}
+
+.sb-search{padding:10px 14px;border-bottom:1px solid #f0f0f8;display:flex;gap:8px;flex-shrink:0}
+.sb-search input{flex:1;padding:7px 10px;border:1px solid #e8e8f0;border-radius:7px;font-size:12px;outline:none;background:#f8f8fc}
 .sb-search input:focus{border-color:#1a237e}
-.refresh-btn{padding:6px 10px;background:#1a237e;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;flex-shrink:0}
+.sb-refresh{padding:5px 10px;background:#1a237e;color:#fff;border:none;border-radius:7px;font-size:13px;cursor:pointer;flex-shrink:0}
+
 .conv-list{flex:1;overflow-y:auto}
-.conv-item{padding:14px 18px;border-bottom:1px solid #f5f5f8;cursor:pointer}
+.conv-item{padding:12px 16px;border-bottom:1px solid #f5f5f8;cursor:pointer;transition:background 0.1s;position:relative}
 .conv-item:hover{background:#f8f8fc}
 .conv-item.active{background:#eef0ff;border-left:3px solid #1a237e}
-.conv-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.conv-name{font-size:13px;font-weight:500;color:#1a1a2e}
-.conv-time{font-size:10px;color:#b0b0c8}
-.conv-preview{font-size:12px;color:#9090a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.conv-meta{display:flex;gap:6px;margin-top:6px;align-items:center}
-.badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
-.badge-cat{background:#e8eaf6;color:#1a237e}
-.badge-new{background:#ffebee;color:#c62828}
-.unread-dot{width:8px;height:8px;background:#c62828;border-radius:50%;margin-left:auto;flex-shrink:0}
-.sb-footer{padding:14px 18px;border-top:1px solid #f0f0f8;display:flex;align-items:center;gap:10px}
-.sb-avatar{width:36px;height:36px;background:#1a237e;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0}
-.sb-user-info{flex:1;min-width:0}
-.sb-user-name{font-size:13px;font-weight:600;color:#1a1a2e}
-.sb-user-role{font-size:11px;color:#9090a8}
-.sb-logout{font-size:11px;color:#c62828;cursor:pointer}
-.chat-area{flex:1;display:flex;flex-direction:column;background:#f8f8fc}
-.chat-header{padding:16px 20px;background:#fff;border-bottom:1px solid #e8e8f0;display:flex;align-items:center;gap:14px}
-.chat-header-info{flex:1}
-.chat-header-name{font-size:15px;font-weight:700;color:#1a1a2e}
-.chat-header-meta{font-size:12px;color:#9090a8;margin-top:2px}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid #e0e0e0;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;background:#fff;color:#1a1a2e}
-.btn:hover{background:#f5f5f5}
-.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
-.msg-group{display:flex;flex-direction:column;gap:3px}
-.msg-group.user{align-items:flex-start}
-.msg-group.me{align-items:flex-end}
-.msg-sender{font-size:10px;color:#9090a8;margin-bottom:2px;padding:0 4px}
-.bubble{max-width:72%;padding:11px 16px;border-radius:16px;font-size:14px;line-height:1.5;word-break:break-word}
-.bubble.user{background:#fff;color:#1a1a2e;border-radius:4px 16px 16px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
-.bubble.me{background:#1a237e;color:#fff;border-radius:16px 4px 16px 16px}
-.msg-time{font-size:10px;color:#c0c0d0;padding:0 4px}
-.no-chat{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#9090a8}
-.no-chat-icon{font-size:48px}
+.conv-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px;gap:6px}
+.conv-name{font-size:13px;font-weight:500;color:#1a1a2e;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.conv-time{font-size:10px;color:#b0b0c8;flex-shrink:0}
+.conv-preview{font-size:11px;color:#9090a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.conv-footer{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tag{font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600}
+.tag-cat{background:#e8eaf6;color:#1a237e}
+.tag-assigned{background:#e8f5e9;color:#2e7d32}
+.tag-unassigned{background:#fff3e0;color:#e65100}
+.tag-needs{background:#ffebee;color:#c62828}
+.unread-dot{width:7px;height:7px;background:#c62828;border-radius:50%;margin-left:auto;flex-shrink:0}
+
+/* Chat area */
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#f5f6fa}
+
+.no-chat{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#9090a8}
+.no-chat-icon{font-size:44px}
 .no-chat-text{font-size:15px;font-weight:500}
-.no-chat-sub{font-size:13px}
-.chat-input-area{padding:16px 20px;background:#fff;border-top:1px solid #e8e8f0}
-.chat-input-row{display:flex;gap:10px;align-items:flex-end}
-.chat-input-wrap{flex:1;background:#f5f5f8;border-radius:12px;border:1.5px solid #e8e8f0;overflow:hidden}
-.chat-input-wrap:focus-within{border-color:#1a237e}
-textarea{width:100%;padding:12px 16px;font-size:14px;border:none;outline:none;background:transparent;resize:none;font-family:inherit;line-height:1.5;max-height:120px}
-.send-btn{width:46px;height:46px;background:#1a237e;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.send-btn:hover{background:#3949ab}
-.send-btn:disabled{background:#b0b8d8;cursor:not-allowed}
-.send-btn svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.disclaimer{font-size:11px;color:#b0b0c8;text-align:center;padding:8px 0 0}
-.loading{text-align:center;padding:30px;color:#9090a8;font-size:13px}
-.spinner{width:20px;height:20px;border:2px solid #e0e0e0;border-top-color:#1a237e;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:30px;color:#9090a8;font-size:13px}
-.status-bar{padding:6px 20px;font-size:11px;text-align:center}
-.status-ok{background:#e8f5e9;color:#2e7d32}
-.status-err{background:#ffebee;color:#c62828}
+.no-chat-sub{font-size:12px}
+
+.chat-wrap{display:none;flex-direction:column;flex:1;overflow:hidden}
+.chat-wrap.show{display:flex}
+
+/* Chat header */
+.chat-header{padding:14px 18px;background:#fff;border-bottom:1px solid #e8e8f0;flex-shrink:0}
+.chat-header-row{display:flex;align-items:center;gap:12px}
+.chat-avatar{width:38px;height:38px;background:#e8eaf6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.chat-title{font-size:14px;font-weight:700;color:#1a1a2e}
+.chat-meta{font-size:11px;color:#9090a8;margin-top:1px}
+.chat-actions{display:flex;gap:7px;margin-left:auto;flex-shrink:0}
+
+/* Assignment bar */
+.assign-bar{padding:10px 18px;background:#fffde7;border-bottom:1px solid #fff9c4;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
+.assign-bar.assigned{background:#e8f5e9;border-bottom-color:#c8e6c9}
+.assign-info{font-size:12px;color:#5d4037;flex:1}
+.assign-info.assigned{color:#1b5e20}
+.assign-actions{display:flex;gap:6px}
+
+/* Handoff note bar */
+.handoff-bar{padding:8px 18px;background:#fff8e1;border-bottom:1px solid #ffecb3;font-size:11px;color:#5d4037;display:none;flex-shrink:0}
+.handoff-bar.show{display:block}
+
+/* Messages */
+.messages{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+
+/* Date separator */
+.date-sep{text-align:center;margin:8px 0;font-size:11px;color:#b0b0c8}
+.date-sep span{background:#e8e8f0;padding:2px 10px;border-radius:10px}
+
+/* Bubbles — WhatsApp style */
+.msg-wrap{display:flex;flex-direction:column;max-width:75%}
+.msg-wrap.from-me{align-self:flex-end;align-items:flex-end}
+.msg-wrap.from-them{align-self:flex-start;align-items:flex-start}
+.msg-sender-name{font-size:10px;color:#9090a8;margin-bottom:2px;padding:0 2px}
+.bubble{padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.5;word-break:break-word;position:relative}
+.bubble.from-me{background:#1a237e;color:#fff;border-radius:16px 4px 16px 16px}
+.bubble.from-them{background:#fff;color:#1a1a2e;border-radius:4px 16px 16px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.bubble.system{background:#f0f0f8;color:#6b6b8a;border-radius:10px;font-size:11px;text-align:center;font-style:italic;padding:6px 12px}
+.bubble.internal{background:#fff9c4;color:#5d4037;border-radius:10px;border:1px dashed #f9a825;font-size:12px}
+.bubble.internal::before{content:"🔒 Internal note · ";font-weight:600}
+.msg-time{font-size:10px;color:#b0b0c8;margin-top:2px;padding:0 2px}
+
+/* Voice note bubble */
+.voice-bubble{display:flex;align-items:center;gap:10px;padding:10px 14px;min-width:180px}
+.voice-play{width:32px;height:32px;background:rgba(255,255,255,0.25);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.voice-play.from-them{background:#e8eaf6;color:#1a237e}
+.voice-waveform{flex:1;height:24px;background:rgba(255,255,255,0.2);border-radius:12px;position:relative;overflow:hidden}
+.voice-waveform.from-them{background:#e8eaf6}
+.voice-duration{font-size:11px;opacity:0.8;flex-shrink:0}
+
+/* Input area */
+.input-area{padding:12px 16px;background:#fff;border-top:1px solid #e8e8f0;flex-shrink:0}
+.input-tabs{display:flex;gap:6px;margin-bottom:10px}
+.input-tab{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:#f0f0f8;color:#6b6b8a}
+.input-tab.active{background:#1a237e;color:#fff}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.input-wrap{flex:1;background:#f5f5f8;border-radius:12px;border:1.5px solid #e8e8f0;overflow:hidden;transition:border-color 0.15s}
+.input-wrap:focus-within{border-color:#1a237e}
+textarea{width:100%;padding:10px 14px;font-size:14px;border:none;outline:none;background:transparent;resize:none;font-family:inherit;line-height:1.5;max-height:100px}
+.btn-send{width:42px;height:42px;background:#1a237e;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s}
+.btn-send:hover{background:#3949ab}
+.btn-send:disabled{background:#b0b8d8;cursor:not-allowed}
+.btn-send svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn-voice{width:42px;height:42px;background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.btn-voice:hover{background:#c8e6c9}
+.btn-voice.recording{background:#ffebee;border-color:#ef9a9a;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.disclaimer{font-size:10px;color:#b0b0c8;text-align:center;margin-top:6px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid #e0e0e0;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;background:#fff;color:#1a1a2e;white-space:nowrap}
+.btn:hover{background:#f5f5f5}
+.btn-primary{background:#1a237e;color:#fff;border-color:#1a237e}
+.btn-primary:hover{background:#3949ab}
+.btn-green{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7}
+.btn-green:hover{background:#c8e6c9}
+.btn-orange{background:#fff3e0;color:#e65100;border-color:#ffcc80}
+.btn-orange:hover{background:#ffe0b2}
+.btn-sm{padding:4px 9px;font-size:11px}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center}
+.modal{background:#fff;border-radius:16px;padding:24px;width:440px;max-height:85vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.modal p{font-size:12px;color:#9090a8;margin-bottom:16px;line-height:1.5}
+.modal input,.modal textarea,.modal select{width:100%;padding:10px 12px;border:1.5px solid #e8e8f0;border-radius:8px;font-size:13px;margin-bottom:12px;outline:none;font-family:inherit}
+.modal input:focus,.modal textarea:focus,.modal select:focus{border-color:#1a237e}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+
+/* Status */
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
+.dot-green{background:#43a047}
+.dot-red{background:#e53935}
+.dot-amber{background:#fb8c00}
+
+/* Scrollbar */
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:#dde;border-radius:2px}
+
+/* Loading */
+.loading{text-align:center;padding:24px;color:#9090a8;font-size:12px}
+.spinner{width:18px;height:18px;border:2px solid #e0e0e0;border-top-color:#1a237e;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-list{text-align:center;padding:30px 16px;color:#9090a8;font-size:12px;line-height:1.6}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-card">
     <h1>🛡 SafeTrace</h1>
     <div class="sub">Counselor & Legal Support Panel</div>
-    <label>Your Name</label>
-    <input type="text" id="myName" placeholder="e.g. Dr. Fatima" />
-    <label>Role</label>
+    <label>Your Full Name</label>
+    <input type="text" id="myName" placeholder="e.g. Dr. Fatima Malik" />
+    <label>Your Role</label>
     <select id="myRole">
       <option value="counselor">💙 Counselor — Emotional Support</option>
       <option value="legal">⚖️ Legal Advisor — Legal Guidance</option>
@@ -106,65 +191,144 @@ textarea{width:100%;padding:12px 16px;font-size:14px;border:none;outline:none;ba
     <label>Access Code</label>
     <input type="password" id="accessCode" placeholder="Enter your access code" />
     <button onclick="doLogin()">Enter Support Panel</button>
-    <p class="login-err" id="loginErr">Incorrect access code.</p>
+    <p class="login-err" id="loginErr">Incorrect access code. Please try again.</p>
   </div>
 </div>
 
+<!-- APP -->
 <div class="app" id="app">
+
+  <!-- Sidebar -->
   <div class="sidebar">
     <div class="sb-header">
-      <h2>🛡 SafeTrace</h2>
-      <p>Support Chat Panel</p>
-      <span class="sb-role" id="roleLabel">Counselor</span>
-    </div>
-    <div class="sb-search">
-      <input type="text" placeholder="Search cases..." oninput="filterList(this.value)" />
-      <button class="refresh-btn" onclick="loadCases()">↻</button>
-    </div>
-    <div class="conv-list" id="convList">
-      <div class="loading"><div class="spinner"></div>Loading...</div>
-    </div>
-    <div class="sb-footer">
-      <div class="sb-avatar" id="sbAvatar">?</div>
-      <div class="sb-user-info">
-        <div class="sb-user-name" id="sbName">Counselor</div>
-        <div class="sb-user-role" id="sbRole">Support Team</div>
+      <h2>🛡 SafeTrace Support</h2>
+      <p id="headerRole">Counselor Panel</p>
+      <div class="sb-me">
+        <div class="sb-me-avatar" id="meAvatar">?</div>
+        <div class="sb-me-info">
+          <div class="sb-me-name" id="meName">—</div>
+          <div class="sb-me-role" id="meRole">—</div>
+        </div>
+        <span class="sb-logout" onclick="doLogout()">Sign out</span>
       </div>
-      <span class="sb-logout" onclick="doLogout()">Sign out</span>
+    </div>
+
+    <div class="sb-search">
+      <input type="text" placeholder="Search cases..." oninput="filterList(this.value)" id="searchInput" />
+      <button class="sb-refresh" onclick="loadCases()" title="Refresh">↻</button>
+    </div>
+
+    <div class="conv-list" id="convList">
+      <div class="loading"><div class="spinner"></div>Loading cases...</div>
     </div>
   </div>
 
+  <!-- Chat Area -->
   <div class="chat-area">
-    <div id="statusBar" class="status-bar status-ok">🟢 Connected to SafeTrace backend</div>
 
+    <!-- No chat selected -->
     <div class="no-chat" id="noChat">
       <div class="no-chat-icon">💬</div>
       <div class="no-chat-text">Select a conversation</div>
-      <div class="no-chat-sub">Cases with chat messages appear on the left</div>
+      <div class="no-chat-sub">Cases with messages appear on the left sidebar</div>
     </div>
 
-    <div id="chatWrap" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <!-- Active chat -->
+    <div class="chat-wrap" id="chatWrap">
+
+      <!-- Header -->
       <div class="chat-header">
-        <div style="width:40px;height:40px;background:#e8eaf6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
-        <div class="chat-header-info">
-          <div class="chat-header-name" id="chatTitle">—</div>
-          <div class="chat-header-meta" id="chatMeta">—</div>
-        </div>
-        <button class="btn" onclick="refreshMessages()">🔄 Refresh</button>
-      </div>
-      <div class="messages" id="messages"></div>
-      <div class="chat-input-area">
-        <div class="chat-input-row">
-          <div class="chat-input-wrap">
-            <textarea id="msgInput" placeholder="Type your reply..." rows="1"
-              oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+        <div class="chat-header-row">
+          <div class="chat-avatar">👤</div>
+          <div style="flex:1;min-width:0">
+            <div class="chat-title" id="chatTitle">—</div>
+            <div class="chat-meta" id="chatMeta">—</div>
           </div>
-          <button class="send-btn" id="sendBtn" onclick="sendMsg()">
-            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
+          <div class="chat-actions">
+            <button class="btn btn-sm" onclick="refreshMsgs()">🔄</button>
+            <button class="btn btn-sm btn-green" onclick="showAssignModal()" id="assignBtn">👤 Assign</button>
+            <button class="btn btn-sm btn-orange" onclick="showHandoffModal()" id="handoffBtn" style="display:none">🔄 Handoff</button>
+          </div>
         </div>
-        <div class="disclaimer">🔒 All chats are anonymous. Never share user details externally.</div>
       </div>
+
+      <!-- Assignment bar -->
+      <div class="assign-bar" id="assignBar">
+        <span class="assign-info" id="assignInfo">⚠️ Unassigned — assign yourself to this case</span>
+        <div class="assign-actions">
+          <button class="btn btn-sm btn-primary" onclick="assignMyself()" id="assignMyselfBtn">Assign to me</button>
+        </div>
+      </div>
+
+      <!-- Handoff note bar -->
+      <div class="handoff-bar" id="handoffBar"></div>
+
+      <!-- Messages -->
+      <div class="messages" id="messages"></div>
+
+      <!-- Input -->
+      <div class="input-area">
+        <div class="input-tabs">
+          <button class="input-tab active" onclick="setInputMode('reply',this)" id="tabReply">💬 Reply</button>
+          <button class="input-tab" onclick="setInputMode('note',this)" id="tabNote">🔒 Internal Note</button>
+          <button class="input-tab" onclick="setInputMode('voice',this)" id="tabVoice">🎙️ Voice Note</button>
+        </div>
+
+        <!-- Reply / Note input -->
+        <div id="textInput">
+          <div class="input-row">
+            <div class="input-wrap">
+              <textarea id="msgInput" placeholder="Type your message..." rows="1"
+                oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+            </div>
+            <button class="btn-send" id="sendBtn" onclick="sendMsg()">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Voice input -->
+        <div id="voiceInput" style="display:none">
+          <div class="input-row" style="justify-content:center;gap:16px;padding:8px 0">
+            <button class="btn-voice" id="voiceBtn" onclick="toggleRecording()">🎙️</button>
+            <span id="voiceStatus" style="font-size:13px;color:#9090a8">Tap to start recording</span>
+            <button class="btn btn-primary" id="sendVoiceBtn" style="display:none" onclick="sendVoiceNote()">Send 📤</button>
+          </div>
+        </div>
+
+        <div class="disclaimer">🔒 All chats are anonymous. Internal notes are only visible to the support team.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN MODAL -->
+<div class="modal-overlay" id="assignModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3>👤 Assign Counselor</h3>
+    <p>Assign yourself or another team member to this case. The assigned counselor is the primary contact.</p>
+    <label>Counselor Name</label>
+    <input type="text" id="assignName" placeholder="Full name" />
+    <div class="modal-actions">
+      <button class="btn" onclick="document.getElementById('assignModal').style.display='none'">Cancel</button>
+      <button class="btn btn-primary" onclick="doAssign()">Assign</button>
+    </div>
+  </div>
+</div>
+
+<!-- HANDOFF MODAL -->
+<div class="modal-overlay" id="handoffModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3>🔄 Hand Off Case</h3>
+    <p>Transfer this case to another counselor. Write a private handoff note so they have full context. The user will see a friendly system message but NOT your private note.</p>
+    <label>Hand off to</label>
+    <input type="text" id="handoffTo" placeholder="Counselor's full name" />
+    <label>Private handoff note (only team sees this)</label>
+    <textarea id="handoffNote" rows="4" placeholder="e.g. User is scared to go to work. Has photos and screenshots. Considering FIR. Needs gentle encouragement. Spoke 3 times this week."></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="document.getElementById('handoffModal').style.display='none'">Cancel</button>
+      <button class="btn btn-primary" onclick="doHandoff()">Hand Off</button>
     </div>
   </div>
 </div>
@@ -175,14 +339,52 @@ let API = 'https://safetrace-backend.fly.dev';
 let ME = { name:'', role:'counselor', token:null };
 let ACTIVE = null;
 let ALL_CASES = [];
+let INPUT_MODE = 'reply';
 let POLL = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+
+// ─── Pakistan Time ───────────────────────────────────────────────────────────
+
+function toPKT(utcStr) {
+  if (!utcStr) return '—';
+  try {
+    const d = new Date(utcStr);
+    // PKT = UTC+5
+    const pkt = new Date(d.getTime() + (5 * 60 * 60 * 1000));
+    const now = new Date();
+    const nowPKT = new Date(now.getTime() + (5 * 60 * 60 * 1000));
+    const diff = nowPKT - pkt;
+
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+    if (diff < 86400000) {
+      return pkt.toLocaleTimeString('en-PK', { hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'UTC' });
+    }
+    return pkt.toLocaleDateString('en-PK', {
+      month:'short', day:'numeric',
+      hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'UTC'
+    });
+  } catch(_) { return utcStr; }
+}
+
+function dateSep(utcStr) {
+  if (!utcStr) return '';
+  try {
+    const d = new Date(utcStr);
+    const pkt = new Date(d.getTime() + (5 * 60 * 60 * 1000));
+    return pkt.toLocaleDateString('en-PK', { weekday:'long', month:'long', day:'numeric', timeZone:'UTC' });
+  } catch(_) { return ''; }
+}
+
+// ─── Login ───────────────────────────────────────────────────────────────────
 
 function doLogin() {
   const name = document.getElementById('myName').value.trim();
   const role = document.getElementById('myRole').value;
   const url = document.getElementById('apiUrl').value.trim().replace(/\/+$/,'');
   const code = document.getElementById('accessCode').value;
-
   if (!name) { alert('Please enter your name'); return; }
   if (code !== ACCESS_CODE) {
     const e = document.getElementById('loginErr');
@@ -190,16 +392,13 @@ function doLogin() {
     setTimeout(() => e.style.display='none', 3000);
     return;
   }
-
-  API = url;
-  ME = { name, role, token: null };
+  API = url; ME = { name, role, token:null };
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('app').classList.add('show');
-  document.getElementById('sbName').textContent = name;
-  document.getElementById('sbRole').textContent = role === 'counselor' ? '💙 Counselor' : '⚖️ Legal Advisor';
-  document.getElementById('sbAvatar').textContent = name[0].toUpperCase();
-  document.getElementById('roleLabel').textContent = role === 'counselor' ? '💙 Counselor' : '⚖️ Legal';
-
+  document.getElementById('meName').textContent = name;
+  document.getElementById('meAvatar').textContent = name[0].toUpperCase();
+  document.getElementById('meRole').textContent = role === 'counselor' ? '💙 Counselor' : '⚖️ Legal Advisor';
+  document.getElementById('headerRole').textContent = role === 'counselor' ? 'Counselor Panel' : 'Legal Advisor Panel';
   init();
 }
 
@@ -207,142 +406,147 @@ function doLogout() {
   clearInterval(POLL);
   document.getElementById('app').classList.remove('show');
   document.getElementById('loginWrap').style.display = 'flex';
-  ALL_CASES = []; ACTIVE = null;
+  ALL_CASES = []; ACTIVE = null; ME.token = null;
 }
 
-// ─── API calls using the counselor endpoint ─────────────────────────────────
+// ─── Bootstrap ───────────────────────────────────────────────────────────────
 
-async function counselorFetch(path, opts={}) {
-  const headers = {
-    'Content-Type': 'application/json',
-    'x-counselor-key': ACCESS_CODE,
-    ...opts.headers
-  };
-  const r = await fetch(API + '/api/v1/counselor' + path, { ...opts, headers });
-  if (!r.ok) throw new Error('API ' + r.status);
-  return r.json();
-}
-
-async function userFetch(path, opts={}) {
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(ME.token ? { Authorization: 'Bearer ' + ME.token } : {}),
-    ...opts.headers
-  };
-  const r = await fetch(API + '/api/v1' + path, { ...opts, headers });
-  if (!r.ok) throw new Error('API ' + r.status);
-  return r.json();
+async function init() {
+  await getToken();
+  await loadCases();
+  POLL = setInterval(async () => {
+    await loadCases();
+    if (ACTIVE) await refreshMsgs(true);
+  }, 20000);
 }
 
 async function getToken() {
   try {
-    const r = await fetch(API + '/api/v1/identity/create', { method: 'POST' });
+    const r = await fetch(API + '/api/v1/identity/create', { method:'POST' });
     const d = await r.json();
     ME.token = d.access_token;
   } catch(e) { console.warn('Token error', e); }
 }
 
-// ─── Init ────────────────────────────────────────────────────────────────────
+// ─── API ─────────────────────────────────────────────────────────────────────
 
-async function init() {
-  await getToken();
-  await loadCases();
-  // Auto-refresh every 20 seconds
-  POLL = setInterval(async () => {
-    await loadCases();
-    if (ACTIVE) await refreshMessages();
-  }, 20000);
+async function cFetch(path, opts={}) {
+  const h = { 'Content-Type':'application/json', 'x-counselor-key':ACCESS_CODE, ...(opts.headers||{}) };
+  const r = await fetch(API + '/api/v1/counselor' + path, { ...opts, headers:h });
+  if (!r.ok) throw new Error('API ' + r.status + ' ' + await r.text());
+  return r.json();
 }
 
-// ─── Load all cases via counselor endpoint ───────────────────────────────────
+// ─── Load cases ──────────────────────────────────────────────────────────────
 
 async function loadCases() {
-  const el = document.getElementById('convList');
   try {
-    const d = await counselorFetch('/cases?chat_type=' + ME.role);
+    const d = await cFetch('/cases?chat_type=' + ME.role);
     ALL_CASES = d.cases || [];
     renderList(ALL_CASES);
-    setStatus(true);
   } catch(e) {
-    console.error('Load cases error:', e);
-    setStatus(false);
-    el.innerHTML = '<div class="empty">Could not load cases.<br>Check backend is online.</div>';
+    console.error('Load cases:', e);
+    document.getElementById('convList').innerHTML =
+      '<div class="empty-list">Could not load cases.<br>Check backend connection.</div>';
   }
 }
 
 function renderList(cases) {
   const el = document.getElementById('convList');
-
-  // Sort: cases with messages first, then by last message time
   const sorted = [...cases].sort((a,b) => {
-    if (a.last_message && !b.last_message) return -1;
-    if (!a.last_message && b.last_message) return 1;
-    if (a.last_message && b.last_message) {
+    if (a.needs_reply && !b.needs_reply) return -1;
+    if (!a.needs_reply && b.needs_reply) return 1;
+    if (a.last_message && b.last_message)
       return new Date(b.last_message.timestamp) - new Date(a.last_message.timestamp);
-    }
     return new Date(b.created_at) - new Date(a.created_at);
   });
 
   if (!sorted.length) {
-    el.innerHTML = '<div class="empty">No cases yet.<br>Users will appear here when they send messages.</div>';
+    el.innerHTML = '<div class="empty-list">No cases yet.<br>Cases appear here when users send messages.</div>';
     return;
   }
 
   el.innerHTML = sorted.map(c => {
     const isActive = ACTIVE && ACTIVE.case_id === c.case_id;
-    const lastMsg = c.last_message;
-    const hasUserMsg = lastMsg && lastMsg.sender_type === 'user';
-    const needsReply = hasUserMsg;
+    const assigned = c.assigned_counselor;
+    const preview = c.last_message
+      ? (c.last_message.sender_name || c.last_message.sender_type) + ': ' + c.last_message.content.substring(0,45) + (c.last_message.content.length>45?'...':'')
+      : 'No messages yet';
 
-    return `<div class="conv-item ${isActive ? 'active' : ''}"
-      onclick="openCase('${c.case_id}')">
+    return `<div class="conv-item ${isActive?'active':''}" onclick="openCase('${c.case_id}')">
       <div class="conv-header">
-        <span class="conv-name">${escHtml(c.title || 'Untitled case')}</span>
-        <span class="conv-time">${lastMsg ? td(lastMsg.timestamp) : td(c.created_at)}</span>
+        <span class="conv-name">${esc(c.title||'Untitled')}</span>
+        <span class="conv-time">${c.last_message ? toPKT(c.last_message.timestamp) : toPKT(c.created_at)}</span>
       </div>
-      <div class="conv-preview">${lastMsg ? escHtml(lastMsg.content.substring(0,60)) + (lastMsg.content.length>60?'...':'') : 'No messages yet'}</div>
-      <div class="conv-meta">
-        <span class="badge badge-cat">${c.category}</span>
-        <span style="font-size:10px;color:#9090a8">${c.incident_count} incidents</span>
-        ${needsReply ? '<span class="badge badge-new">Awaiting reply</span>' : ''}
-        ${needsReply ? '<span class="unread-dot"></span>' : ''}
+      <div class="conv-preview">${esc(preview)}</div>
+      <div class="conv-footer">
+        <span class="tag tag-cat">${c.category}</span>
+        ${assigned
+          ? `<span class="tag tag-assigned">👤 ${esc(assigned)}</span>`
+          : `<span class="tag tag-unassigned">⚠️ Unassigned</span>`}
+        ${c.needs_reply ? '<span class="tag tag-needs">Needs reply</span>' : ''}
+        ${c.needs_reply ? '<span class="unread-dot"></span>' : ''}
       </div>
     </div>`;
   }).join('');
 }
 
 function filterList(q) {
-  const items = document.querySelectorAll('.conv-item');
-  items.forEach(item => {
-    item.style.display = item.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  document.querySelectorAll('.conv-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
   });
 }
 
-// ─── Open a case ─────────────────────────────────────────────────────────────
+// ─── Open case ───────────────────────────────────────────────────────────────
 
 async function openCase(caseId) {
-  const c = ALL_CASES.find(x => x.case_id === caseId);
-  if (!c) return;
-  ACTIVE = c;
+  ACTIVE = ALL_CASES.find(c => c.case_id === caseId) || { case_id: caseId };
 
-  // Update UI
   document.getElementById('noChat').style.display = 'none';
-  const wrap = document.getElementById('chatWrap');
-  wrap.style.display = 'flex';
-  wrap.style.flex = '1';
-  wrap.style.overflow = 'hidden';
-  wrap.style.flexDirection = 'column';
-
-  document.getElementById('chatTitle').textContent = c.title || 'Untitled Case';
+  document.getElementById('chatWrap').classList.add('show');
+  document.getElementById('chatTitle').textContent = ACTIVE.title || 'Untitled Case';
   document.getElementById('chatMeta').textContent =
-    `${c.case_id} · ${c.category} · ${c.incident_count} incidents · ${ME.role} chat`;
+    `${caseId} · ${ACTIVE.category||'unknown'} · ${ACTIVE.incident_count||0} incidents · ${ME.role} chat · PKT`;
+
+  // Assignment bar
+  const assigned = ACTIVE.assigned_counselor;
+  const assignBar = document.getElementById('assignBar');
+  const assignInfo = document.getElementById('assignInfo');
+  const assignMyselfBtn = document.getElementById('assignMyselfBtn');
+  const handoffBtn = document.getElementById('handoffBtn');
+  const assignBtn = document.getElementById('assignBtn');
+
+  if (assigned) {
+    assignBar.className = 'assign-bar assigned';
+    const avail = ACTIVE.counselor_available !== false;
+    assignInfo.textContent = `👤 ${assigned} is assigned ${avail ? '· 🟢 Available' : '· 🔴 Unavailable'}`;
+    assignMyselfBtn.style.display = assigned === ME.name ? 'none' : 'inline-flex';
+    assignMyselfBtn.textContent = 'Take over';
+    handoffBtn.style.display = assigned === ME.name ? 'inline-flex' : 'none';
+    assignBtn.textContent = '✏️ Reassign';
+  } else {
+    assignBar.className = 'assign-bar';
+    assignInfo.textContent = '⚠️ No counselor assigned yet';
+    assignMyselfBtn.style.display = 'inline-flex';
+    assignMyselfBtn.textContent = 'Assign to me';
+    handoffBtn.style.display = 'none';
+    assignBtn.textContent = '👤 Assign';
+  }
+
+  // Handoff note
+  const handoffBar = document.getElementById('handoffBar');
+  if (ACTIVE.handoff_note) {
+    handoffBar.className = 'handoff-bar show';
+    handoffBar.innerHTML = '📋 <strong>Handoff note:</strong> ' + esc(ACTIVE.handoff_note);
+  } else {
+    handoffBar.className = 'handoff-bar';
+  }
 
   // Mark active in sidebar
   document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.conv-item').forEach(el => {
-    if (el.onclick && el.getAttribute('onclick') && el.getAttribute('onclick').includes(caseId)) {
+    if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(caseId))
       el.classList.add('active');
-    }
   });
 
   await loadMessages(caseId);
@@ -350,12 +554,12 @@ async function openCase(caseId) {
 
 async function loadMessages(caseId) {
   const el = document.getElementById('messages');
-  el.innerHTML = '<div class="loading"><div class="spinner"></div>Loading messages...</div>';
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
   try {
-    const d = await counselorFetch('/history/' + caseId + '?chat_type=' + ME.role);
+    const d = await cFetch('/history/' + caseId + '?chat_type=' + ME.role + '&include_internal=true');
     renderMessages(d.messages || []);
   } catch(e) {
-    el.innerHTML = '<div class="empty">Could not load messages.</div>';
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#c62828;font-size:12px">Could not load messages</div>';
   }
 }
 
@@ -363,30 +567,78 @@ function renderMessages(msgs) {
   const el = document.getElementById('messages');
   if (!msgs.length) {
     el.innerHTML = `<div style="text-align:center;padding:40px;color:#9090a8">
-      <div style="font-size:32px;margin-bottom:12px">👋</div>
-      <div style="font-size:14px;font-weight:500;margin-bottom:4px">No messages yet</div>
-      <div style="font-size:12px">Send a greeting to start supporting this user</div>
+      <div style="font-size:30px;margin-bottom:10px">👋</div>
+      <div style="font-size:14px;font-weight:500">No messages yet</div>
+      <div style="font-size:12px;margin-top:4px">Send a greeting to start supporting this user</div>
     </div>`;
     return;
   }
 
-  el.innerHTML = msgs.map(m => {
-    const isMe = m.sender_type !== 'user';
-    return `<div class="msg-group ${isMe ? 'me' : 'user'}">
-      <div class="msg-sender">${isMe ? ME.name : 'Anonymous User'}</div>
-      <div class="bubble ${isMe ? 'me' : 'user'}">${escHtml(m.content)}</div>
-      <div class="msg-time">${td(m.timestamp)}</div>
-    </div>`;
-  }).join('');
+  let html = '';
+  let lastDate = '';
 
+  msgs.forEach(m => {
+    // Date separator
+    const msgDate = dateSep(m.timestamp);
+    if (msgDate !== lastDate) {
+      html += `<div class="date-sep"><span>${msgDate} · Pakistan Time</span></div>`;
+      lastDate = msgDate;
+    }
+
+    const isMe = m.sender_type !== 'user' && m.sender_type !== 'system';
+    const isSystem = m.sender_type === 'system';
+    const isInternal = m.is_internal_note;
+    const senderLabel = m.sender_name || m.sender_type;
+
+    if (isSystem) {
+      html += `<div style="text-align:center;margin:4px 0">
+        <span class="bubble system">${esc(m.content)}</span>
+        <div class="msg-time" style="text-align:center">${toPKT(m.timestamp)}</div>
+      </div>`;
+    } else if (isInternal) {
+      html += `<div class="msg-wrap" style="align-self:center;max-width:90%;align-items:center">
+        <div class="bubble internal">${esc(m.content)}</div>
+        <div class="msg-time">${senderLabel} · ${toPKT(m.timestamp)}</div>
+      </div>`;
+    } else {
+      // Normal message — WhatsApp style
+      // isMe = counselor (right side), user = left side
+      html += `<div class="msg-wrap ${isMe ? 'from-me' : 'from-them'}">
+        <div class="msg-sender-name">${isMe ? senderLabel : 'Anonymous User'}</div>
+        <div class="bubble ${isMe ? 'from-me' : 'from-them'}">${esc(m.content).replace(/\n/g,'<br>')}</div>
+        <div class="msg-time">${toPKT(m.timestamp)}</div>
+      </div>`;
+    }
+  });
+
+  el.innerHTML = html;
   el.scrollTop = el.scrollHeight;
 }
 
-async function refreshMessages() {
-  if (ACTIVE) await loadMessages(ACTIVE.case_id);
+async function refreshMsgs(silent=false) {
+  if (!ACTIVE) return;
+  if (!silent) document.getElementById('messages').innerHTML = '<div class="loading"><div class="spinner"></div>Refreshing...</div>';
+  await loadMessages(ACTIVE.case_id);
 }
 
 // ─── Send message ─────────────────────────────────────────────────────────────
+
+function setInputMode(mode, btn) {
+  INPUT_MODE = mode;
+  document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('textInput').style.display = mode === 'voice' ? 'none' : 'block';
+  document.getElementById('voiceInput').style.display = mode === 'voice' ? 'block' : 'none';
+
+  const input = document.getElementById('msgInput');
+  if (mode === 'note') {
+    input.placeholder = '🔒 Internal note — only your team sees this...';
+    input.style.background = '#fffde7';
+  } else {
+    input.placeholder = 'Type your reply to the user...';
+    input.style.background = 'transparent';
+  }
+}
 
 async function sendMsg() {
   const input = document.getElementById('msgInput');
@@ -394,96 +646,170 @@ async function sendMsg() {
   if (!content || !ACTIVE) return;
 
   document.getElementById('sendBtn').disabled = true;
+  const isInternal = INPUT_MODE === 'note';
 
   try {
-    // Send via WebSocket using counselor token
-    await sendViaWS(content, ACTIVE.case_id);
+    await cFetch('/note', {
+      method: 'POST',
+      body: JSON.stringify({
+        case_id: ACTIVE.case_id,
+        counselor_name: ME.name,
+        content,
+        chat_type: ME.role,
+        is_internal: isInternal,
+      })
+    });
+
     input.value = '';
     input.style.height = 'auto';
     await loadMessages(ACTIVE.case_id);
-    // Reload case list to update preview
     await loadCases();
   } catch(e) {
-    alert('Could not send message. Please try again.');
-    console.error(e);
+    // Fallback: try WebSocket
+    try { await sendViaWS(content); } catch(_) {}
+    await loadMessages(ACTIVE.case_id);
   } finally {
     document.getElementById('sendBtn').disabled = false;
     input.focus();
   }
 }
 
-async function sendViaWS(content, caseId) {
+async function sendViaWS(content) {
   return new Promise((resolve, reject) => {
-    const wsUrl = API.replace('https://', 'wss://').replace('http://', 'ws://');
-    const ws = new WebSocket(
-      `${wsUrl}/api/v1/chat/ws/${caseId}/${ME.role}?token=${ME.token}`
-    );
-    let sent = false;
-
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'message', content }));
-      sent = true;
-    };
-
-    ws.onmessage = () => {
-      ws.close();
-      resolve();
-    };
-
-    ws.onerror = (e) => {
-      ws.close();
-      if (!sent) reject(new Error('WS connection failed'));
-      else resolve(); // message was sent even if WS closed
-    };
-
-    // Fallback timeout — resolve after 3s regardless
-    setTimeout(() => {
-      ws.close();
-      resolve();
-    }, 3000);
+    const wsUrl = API.replace('https://','wss://').replace('http://','ws://');
+    const ws = new WebSocket(`${wsUrl}/api/v1/chat/ws/${ACTIVE.case_id}/${ME.role}?token=${ME.token}`);
+    ws.onopen = () => ws.send(JSON.stringify({ type:'message', content }));
+    ws.onmessage = () => { ws.close(); resolve(); };
+    ws.onerror = () => { ws.close(); reject(); };
+    setTimeout(() => { ws.close(); resolve(); }, 3000);
   });
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMsg();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
 }
 
 function autoResize(el) {
   el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
 }
 
-function escHtml(t) {
-  if (!t) return '';
-  return String(t)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/\n/g,'<br>');
+// ─── Voice notes ──────────────────────────────────────────────────────────────
+
+async function toggleRecording() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    await startRecording();
+  }
 }
 
-function td(s) {
-  if (!s) return '—';
+async function startRecording() {
   try {
-    const d = new Date(s);
-    const now = new Date();
-    const diff = now - d;
-    if (diff < 60000) return 'just now';
-    if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
-    if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
-    return d.toLocaleDateString('en-PK',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  } catch(_) { return s; }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      document.getElementById('sendVoiceBtn').style.display = 'inline-flex';
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    document.getElementById('voiceBtn').classList.add('recording');
+    document.getElementById('voiceBtn').textContent = '⏹️';
+    document.getElementById('voiceStatus').textContent = 'Recording... tap to stop';
+  } catch(e) {
+    alert('Microphone access denied. Please allow microphone access.');
+  }
 }
 
-function setStatus(ok) {
-  const el = document.getElementById('statusBar');
-  el.className = 'status-bar ' + (ok ? 'status-ok' : 'status-err');
-  el.textContent = ok ? '🟢 Connected to SafeTrace backend' : '🔴 Cannot reach backend — check connection';
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+    isRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+    document.getElementById('voiceBtn').textContent = '🎙️';
+    document.getElementById('voiceStatus').textContent = 'Recording ready — tap Send';
+  }
+}
+
+async function sendVoiceNote() {
+  if (!audioChunks.length || !ACTIVE) return;
+  alert('Voice note recorded. Voice note upload via backend will be available in the next update. For now, please type your message.');
+  document.getElementById('sendVoiceBtn').style.display = 'none';
+  document.getElementById('voiceStatus').textContent = 'Tap to start recording';
+  audioChunks = [];
+}
+
+// ─── Assignment & Handoff ────────────────────────────────────────────────────
+
+function showAssignModal() {
+  document.getElementById('assignName').value = ME.name;
+  document.getElementById('assignModal').style.display = 'flex';
+}
+
+async function doAssign() {
+  const name = document.getElementById('assignName').value.trim();
+  if (!name) { alert('Enter a name'); return; }
+  try {
+    await cFetch('/assign', {
+      method:'POST',
+      body: JSON.stringify({ case_id: ACTIVE.case_id, counselor_name: name, chat_type: ME.role })
+    });
+    document.getElementById('assignModal').style.display = 'none';
+    await loadCases();
+    await openCase(ACTIVE.case_id);
+    await refreshMsgs();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function assignMyself() {
+  try {
+    await cFetch('/assign', {
+      method:'POST',
+      body: JSON.stringify({ case_id: ACTIVE.case_id, counselor_name: ME.name, chat_type: ME.role })
+    });
+    await loadCases();
+    await openCase(ACTIVE.case_id);
+    await refreshMsgs();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+function showHandoffModal() {
+  document.getElementById('handoffTo').value = '';
+  document.getElementById('handoffNote').value = '';
+  document.getElementById('handoffModal').style.display = 'flex';
+}
+
+async function doHandoff() {
+  const to = document.getElementById('handoffTo').value.trim();
+  const note = document.getElementById('handoffNote').value.trim();
+  if (!to || !note) { alert('Please fill in both fields'); return; }
+  try {
+    await cFetch('/handoff', {
+      method:'POST',
+      body: JSON.stringify({
+        case_id: ACTIVE.case_id,
+        from_counselor: ME.name,
+        to_counselor: to,
+        handoff_note: note,
+        chat_type: ME.role,
+      })
+    });
+    document.getElementById('handoffModal').style.display = 'none';
+    await loadCases();
+    await openCase(ACTIVE.case_id);
+    await refreshMsgs();
+    alert(`Case handed off to ${to}. They will see your private note when they open it.`);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function esc(t) {
+  if (!t) return '';
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 document.addEventListener('keydown', e => {
