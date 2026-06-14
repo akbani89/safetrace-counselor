@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeTrace — Support Panel</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f8;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* Auth screens */
+.auth-wrap{display:flex;align-items:center;justify-content:center;height:100vh;background:linear-gradient(135deg,#1a237e,#3949ab)}
+.auth-card{background:#fff;border-radius:20px;padding:40px;width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.auth-card h1{font-size:22px;font-weight:700;color:#1a237e;margin-bottom:4px}
+.auth-card .sub{font-size:13px;color:#9090a8;margin-bottom:28px}
+.auth-tabs{display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid #e8e8f0}
+.auth-tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:#9090a8;background:#f8f8fc;border:none}
+.auth-tab.active{background:#1a237e;color:#fff}
+.field-label{font-size:12px;font-weight:600;color:#6b6b8a;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.field-input{width:100%;padding:12px 14px;border:1.5px solid #e8e8f0;border-radius:10px;font-size:14px;margin-bottom:14px;outline:none;color:#1a1a2e;background:#fff}
+.field-input:focus{border-color:#1a237e}
+.auth-btn{width:100%;padding:14px;background:#1a237e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+.auth-btn:hover{background:#3949ab}
+.auth-btn.secondary{background:#f5f5f5;color:#1a1a2e;margin-top:10px}
+.auth-btn.secondary:hover{background:#e8e8f0}
+.auth-err{color:#c62828;font-size:12px;margin-top:10px;display:none;text-align:center;padding:8px;background:#ffebee;border-radius:8px}
+.auth-success{color:#2e7d32;font-size:12px;margin-top:10px;display:none;text-align:center;padding:8px;background:#e8f5e9;border-radius:8px}
+.forgot-link{font-size:12px;color:#1a237e;cursor:pointer;text-align:right;margin-top:-10px;margin-bottom:14px;display:block}
+
+/* App layout */
+.app{display:none;height:100vh;flex-direction:row;overflow:hidden}
+.app.show{display:flex}
+.sidebar{width:280px;background:#fff;border-right:1px solid #e8e8f0;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.sb-header{padding:16px 18px;background:#1a237e;color:#fff;flex-shrink:0}
+.sb-header h2{font-size:15px;font-weight:700}
+.sb-me{display:flex;align-items:center;gap:8px;margin-top:10px;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;cursor:pointer}
+.sb-me:hover{background:rgba(255,255,255,0.2)}
+.sb-avatar{width:30px;height:30px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sb-name{font-size:12px;font-weight:600;color:#fff;flex:1}
+.sb-role-small{font-size:10px;color:rgba(255,255,255,0.7)}
+.sb-status{display:flex;align-items:center;gap:6px;margin-top:8px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-green{background:#69f0ae}
+.dot-red{background:#ff5252}
+.dot-amber{background:#ffd740}
+.status-text{font-size:11px;color:rgba(255,255,255,0.8)}
+.sb-logout{font-size:11px;color:rgba(255,255,255,0.6);cursor:pointer;margin-left:auto}
+.sb-logout:hover{color:#fff}
+.sb-search{padding:10px 14px;border-bottom:1px solid #f0f0f8;display:flex;gap:8px;flex-shrink:0}
+.sb-search input{flex:1;padding:7px 10px;border:1px solid #e8e8f0;border-radius:7px;font-size:12px;outline:none;background:#f8f8fc}
+.sb-search input:focus{border-color:#1a237e}
+.sb-refresh{padding:5px 10px;background:#1a237e;color:#fff;border:none;border-radius:7px;font-size:14px;cursor:pointer}
+.conv-list{flex:1;overflow-y:auto}
+.conv-item{padding:12px 16px;border-bottom:1px solid #f5f5f8;cursor:pointer}
+.conv-item:hover{background:#f8f8fc}
+.conv-item.active{background:#eef0ff;border-left:3px solid #1a237e}
+.conv-header{display:flex;justify-content:space-between;gap:6px;margin-bottom:3px}
+.conv-name{font-size:13px;font-weight:500;color:#1a1a2e;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.conv-time{font-size:10px;color:#b0b0c8;flex-shrink:0}
+.conv-preview{font-size:11px;color:#9090a8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px}
+.conv-footer{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600}
+.tag-cat{background:#e8eaf6;color:#1a237e}
+.tag-assigned{background:#e8f5e9;color:#2e7d32}
+.tag-unassigned{background:#fff3e0;color:#e65100}
+.tag-needs{background:#ffebee;color:#c62828}
+.unread-dot{width:7px;height:7px;background:#c62828;border-radius:50%;margin-left:auto}
+
+/* Chat area */
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#f5f6fa}
+.no-chat{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#9090a8}
+.no-chat-icon{font-size:44px}
+.no-chat-text{font-size:15px;font-weight:500}
+.no-chat-sub{font-size:12px}
+.chat-wrap{display:none;flex-direction:column;flex:1;overflow:hidden}
+.chat-wrap.show{display:flex}
+.chat-header{padding:13px 18px;background:#fff;border-bottom:1px solid #e8e8f0;flex-shrink:0}
+.chat-header-row{display:flex;align-items:center;gap:12px}
+.chat-avatar-big{width:36px;height:36px;background:#e8eaf6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.chat-title{font-size:14px;font-weight:700;color:#1a1a2e}
+.chat-meta{font-size:11px;color:#9090a8;margin-top:1px}
+.chat-actions{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+.assign-bar{padding:10px 18px;border-bottom:1px solid;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
+.assign-bar.unassigned{background:#fff8e1;border-bottom-color:#ffe082}
+.assign-bar.assigned{background:#e8f5e9;border-bottom-color:#c8e6c9}
+.assign-bar.mine{background:#e8eaf6;border-bottom-color:#c5cae9}
+.assign-info{font-size:12px;flex:1}
+.handoff-bar{padding:8px 18px;background:#fff8e1;border-bottom:1px solid #ffe082;font-size:11px;color:#5d4037;display:none;line-height:1.5;flex-shrink:0}
+.handoff-bar.show{display:block}
+.messages{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.date-sep{text-align:center;margin:8px 0}
+.date-sep span{font-size:11px;color:#9090a8;background:#ebebf0;padding:3px 10px;border-radius:10px}
+.msg-wrap{display:flex;flex-direction:column;max-width:74%}
+.msg-wrap.from-me{align-self:flex-end;align-items:flex-end}
+.msg-wrap.from-them{align-self:flex-start;align-items:flex-start}
+.msg-sender{font-size:10px;color:#9090a8;margin-bottom:2px;padding:0 3px}
+.bubble{padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.5;word-break:break-word}
+.bubble.from-me{background:#1a237e;color:#fff;border-radius:16px 4px 16px 16px}
+.bubble.from-them{background:#fff;color:#1a1a2e;border-radius:4px 16px 16px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.bubble.system-b{background:#f0f0f8;color:#6b6b8a;border-radius:10px;font-size:11px;font-style:italic;padding:6px 14px;text-align:center}
+.bubble.note-b{background:#fff9c4;color:#5d4037;border-radius:10px;border:1px dashed #f9a825;font-size:12px}
+.bubble.note-b::before{content:"🔒 Internal · ";font-weight:700}
+.msg-time{font-size:10px;color:#b0b0c8;margin-top:2px;padding:0 3px}
+.system-wrap{align-self:center;max-width:80%;align-items:center;display:flex;flex-direction:column}
+.input-area{padding:12px 16px;background:#fff;border-top:1px solid #e8e8f0;flex-shrink:0}
+.input-tabs{display:flex;gap:6px;margin-bottom:10px}
+.input-tab{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:#f0f0f8;color:#6b6b8a}
+.input-tab.active{background:#1a237e;color:#fff}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.input-wrap{flex:1;background:#f5f5f8;border-radius:12px;border:1.5px solid #e8e8f0}
+.input-wrap:focus-within{border-color:#1a237e}
+textarea{width:100%;padding:10px 14px;font-size:14px;border:none;outline:none;background:transparent;resize:none;font-family:inherit;line-height:1.5;max-height:100px}
+.btn-send{width:42px;height:42px;background:#1a237e;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-send:hover{background:#3949ab}
+.btn-send:disabled{background:#b0b8d8;cursor:not-allowed}
+.btn-send svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn-voice{width:42px;height:42px;background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px}
+.btn-voice.recording{background:#ffebee;border-color:#ef9a9a;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.voice-area{display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 0}
+.disclaimer{font-size:10px;color:#b0b0c8;text-align:center;margin-top:6px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border:1px solid #e0e0e0;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;background:#fff;color:#1a1a2e;white-space:nowrap}
+.btn:hover{background:#f5f5f5}
+.btn-primary{background:#1a237e;color:#fff;border-color:#1a237e}
+.btn-primary:hover{background:#3949ab}
+.btn-green{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7}
+.btn-orange{background:#fff3e0;color:#e65100;border-color:#ffcc80}
+.btn-red{background:#ffebee;color:#c62828;border-color:#ef9a9a}
+.btn-sm{padding:4px 9px;font-size:11px}
+
+/* Modals */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center}
+.modal{background:#fff;border-radius:16px;padding:24px;width:440px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.modal p{font-size:12px;color:#9090a8;margin-bottom:16px;line-height:1.5}
+.modal select,.modal textarea,.modal input{width:100%;padding:10px 12px;border:1.5px solid #e8e8f0;border-radius:8px;font-size:13px;margin-bottom:12px;outline:none;font-family:inherit}
+.modal select:focus,.modal textarea:focus,.modal input:focus{border-color:#1a237e}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.team-member-row{display:flex;align-items:center;gap:10px;padding:10px;background:#f8f8fc;border-radius:8px;margin-bottom:8px;border:1px solid #f0f0f8}
+.tm-avatar{width:32px;height:32px;background:#e8eaf6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.tm-info{flex:1;min-width:0}
+.tm-name{font-size:13px;font-weight:500}
+.tm-email{font-size:11px;color:#9090a8}
+.tm-actions{display:flex;gap:5px}
+
+/* Profile panel */
+.profile-panel{display:none;flex:1;flex-direction:column;overflow-y:auto;padding:24px;background:#f5f6fa}
+.profile-panel.show{display:flex}
+.profile-header{background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;display:flex;align-items:center;gap:16px}
+.profile-big-avatar{width:60px;height:60px;background:#e8eaf6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.profile-section{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px}
+.profile-section h3{font-size:14px;font-weight:700;margin-bottom:14px;color:#1a1a2e}
+
+/* Token display */
+.token-box{background:#f8f8fc;border:1px solid #e8e8f0;border-radius:8px;padding:12px;font-family:monospace;font-size:13px;word-break:break-all;margin-bottom:12px;color:#1a237e}
+
+/* Misc */
+.loading{text-align:center;padding:24px;color:#9090a8;font-size:12px}
+.spinner{width:18px;height:18px;border:2px solid #e0e0e0;border-top-color:#1a237e;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-list{text-align:center;padding:30px 16px;color:#9090a8;font-size:12px;line-height:1.7}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#dde;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="auth-wrap" id="authWrap">
+  <div class="auth-card" id="loginCard">
+    <h1>🛡 SafeTrace</h1>
+    <div class="sub">Support Team Panel</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="showAuthTab('login',this)">Sign In</button>
+      <button class="auth-tab" onclick="showAuthTab('reset',this)">Reset Password</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="loginForm">
+      <span class="field-label">Email Address</span>
+      <input type="email" class="field-input" id="loginEmail" placeholder="fatima@example.com" />
+      <span class="field-label">Password</span>
+      <input type="password" class="field-input" id="loginPassword" placeholder="Your password" />
+      <input type="url" class="field-input" id="apiUrl" value="https://safetrace-backend.fly.dev" placeholder="API URL" />
+      <button class="auth-btn" onclick="doLogin()">Sign In →</button>
+      <p class="auth-err" id="loginErr">Invalid email or password</p>
+    </div>
+
+    <!-- Reset password form -->
+    <div id="resetForm" style="display:none">
+      <p style="font-size:13px;color:#6b6b8a;margin-bottom:16px;line-height:1.6">
+        Enter your reset token (provided by your admin) and choose a new password.
+      </p>
+      <span class="field-label">Reset Token</span>
+      <input type="text" class="field-input" id="resetToken" placeholder="Paste your reset token here" />
+      <span class="field-label">New Password</span>
+      <input type="password" class="field-input" id="resetNewPass" placeholder="Min 8 characters" />
+      <span class="field-label">Confirm Password</span>
+      <input type="password" class="field-input" id="resetConfirmPass" placeholder="Repeat new password" />
+      <button class="auth-btn" onclick="doResetPassword()">Set New Password →</button>
+      <p class="auth-err" id="resetErr">Error resetting password</p>
+      <p class="auth-success" id="resetSuccess">Password reset! You can now sign in.</p>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="sidebar">
+    <div class="sb-header">
+      <h2>🛡 SafeTrace Support</h2>
+      <div class="sb-me" onclick="showProfile()" title="My profile & settings">
+        <div class="sb-avatar" id="meAvatar">👤</div>
+        <div style="flex:1;min-width:0">
+          <div class="sb-name" id="meName">—</div>
+          <div class="sb-role-small" id="meRoleLabel">—</div>
+        </div>
+        <span style="font-size:16px;color:rgba(255,255,255,0.6)">⚙️</span>
+      </div>
+      <div class="sb-status">
+        <div class="dot dot-green" id="statusDot"></div>
+        <span class="status-text" id="statusText">Connected · PKT</span>
+        <span class="sb-logout" onclick="doLogout()">Sign out</span>
+      </div>
+    </div>
+    <div class="sb-search">
+      <input type="text" placeholder="Search cases..." oninput="filterList(this.value)" />
+      <button class="sb-refresh" onclick="loadCases()">↻</button>
+    </div>
+    <div class="conv-list" id="convList">
+      <div class="loading"><div class="spinner"></div>Loading...</div>
+    </div>
+  </div>
+
+  <!-- Main area: chat or profile -->
+  <div class="chat-area" id="chatArea">
+    <div class="no-chat" id="noChat">
+      <div class="no-chat-icon">💬</div>
+      <div class="no-chat-text">Select a conversation</div>
+      <div class="no-chat-sub">Cases with messages appear on the left</div>
+    </div>
+
+    <div class="chat-wrap" id="chatWrap">
+      <div class="chat-header">
+        <div class="chat-header-row">
+          <div class="chat-avatar-big">👤</div>
+          <div style="flex:1;min-width:0">
+            <div class="chat-title" id="chatTitle">—</div>
+            <div class="chat-meta" id="chatMeta">—</div>
+          </div>
+          <div class="chat-actions">
+            <button class="btn btn-sm" onclick="refreshMsgs()">🔄</button>
+            <span style="font-size:11px;padding:4px 10px;background:#e8eaf6;color:#3949ab;border-radius:8px;font-weight:600">🤖 AI-led • Read only</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:8px 18px;background:#e8f5e9;border-bottom:1px solid #c8e6c9;font-size:12px;color:#2e7d32;display:flex;align-items:center;gap:8px">
+        <span>🤖</span>
+        <span>AI counselors (Amal &amp; Qanoon) are handling all conversations. This panel is for monitoring only.</span>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="input-area" style="background:#f8f9fa;border-top:1px solid #e0e0e0;padding:14px 18px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">👁️</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#3949ab">Monitor mode — read only</div>
+          <div style="font-size:11px;color:#9090a8;margin-top:2px">All support is handled by AI. Conversations auto-refresh every 20 seconds.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile panel -->
+    <div class="profile-panel" id="profilePanel">
+      <div class="profile-header">
+        <div class="profile-big-avatar" id="profileAvatar">👤</div>
+        <div>
+          <div style="font-size:18px;font-weight:700" id="profileName">—</div>
+          <div style="font-size:13px;color:#9090a8" id="profileEmail">—</div>
+          <div style="font-size:12px;color:#1a237e;margin-top:4px" id="profileRole">—</div>
+        </div>
+        <button class="btn" style="margin-left:auto" onclick="showChat()">← Back to chats</button>
+      </div>
+
+      <!-- Change password -->
+      <div class="profile-section">
+        <h3>🔒 Change Password</h3>
+        <span class="field-label">Current Password</span>
+        <input type="password" class="field-input" id="cpCurrent" placeholder="Current password" />
+        <span class="field-label">New Password</span>
+        <input type="password" class="field-input" id="cpNew" placeholder="Min 8 characters" />
+        <span class="field-label">Confirm New Password</span>
+        <input type="password" class="field-input" id="cpConfirm" placeholder="Repeat new password" />
+        <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+        <p class="auth-err" id="cpErr" style="margin-top:8px">Error</p>
+        <p class="auth-success" id="cpSuccess" style="margin-top:8px">Password changed!</p>
+      </div>
+
+      <!-- Team management (admin only) -->
+      <div class="profile-section" id="teamSection" style="display:none">
+        <h3>👥 Team Management</h3>
+        <div id="teamList"><div class="loading"><div class="spinner"></div>Loading team...</div></div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="showAddCounselorModal()">+ Add Team Member</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN MODAL -->
+<div class="modal-overlay" id="assignModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3>👤 Assign Counselor</h3>
+    <p>Select a team member to handle this case.</p>
+    <select id="assignSelect"><option value="">Select team member...</option></select>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('assignModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doAssign()">Assign</button>
+    </div>
+  </div>
+</div>
+
+<!-- HANDOFF MODAL -->
+<div class="modal-overlay" id="handoffModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3>🔄 Hand Off Case</h3>
+    <p>Transfer this case to another team member. Write a private note for context. The user only sees "<em>Name is now supporting you.</em>"</p>
+    <select id="handoffSelect"><option value="">Select team member...</option></select>
+    <textarea id="handoffNote" rows="5" placeholder="Private handoff note — e.g. User is scared to go to work. Has photo evidence. Thinking about FIR. Needs gentle approach..."></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('handoffModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doHandoff()">Hand Off</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD COUNSELOR MODAL -->
+<div class="modal-overlay" id="addCounselorModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3>➕ Add Team Member</h3>
+    <p>Add a new counselor or legal advisor. They'll receive an email with their login details.</p>
+    <span class="field-label">Full Name</span>
+    <input type="text" id="newName" placeholder="e.g. Fatima Malik" />
+    <span class="field-label">Email Address</span>
+    <input type="email" id="newEmail" placeholder="fatima@example.com" />
+    <span class="field-label">Role</span>
+    <select id="newRole">
+      <option value="counselor">💙 Counselor</option>
+      <option value="legal">⚖️ Legal Advisor</option>
+      <option value="admin">🛡 Admin</option>
+    </select>
+    <span class="field-label">Avatar Emoji</span>
+    <input type="text" id="newEmoji" value="👤" maxlength="2" />
+    <span class="field-label">Initial Password</span>
+    <input type="password" id="newPassword" placeholder="Min 8 characters" />
+    <p class="auth-err" id="addErr" style="margin-top:0">Error</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addCounselorModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doAddCounselor()">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESET TOKEN MODAL -->
+<div class="modal-overlay" id="resetTokenModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3>🔑 Password Reset Token</h3>
+    <p id="resetTokenInfo">Share this token with the counselor. It expires in 24 hours. They use it on the Sign In → Reset Password tab.</p>
+    <div class="token-box" id="resetTokenDisplay">—</div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="copyToken()">📋 Copy Token</button>
+      <button class="btn" onclick="closeModal('resetTokenModal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let API = 'https://safetrace-backend.fly.dev';
+let ME = null;
+let ACTIVE = null;
+let ALL_CASES = [];
+let TEAM = [];
+let INPUT_MODE = 'reply';
+let POLL = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+
+// ─── PKT Time ────────────────────────────────────────────────────────────────
+
+function toPKT(s) {
+  if (!s) return '—';
+  try {
+    const d = new Date((s.endsWith('Z') ? s : s + 'Z'));
+    const pkt = new Date(d.getTime() + 5*3600000);
+    const now = new Date(Date.now() + 5*3600000);
+    const diff = now - pkt;
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+    if (diff < 86400000) return pkt.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'UTC'});
+    return pkt.toLocaleDateString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'UTC'});
+  } catch(_){ return s; }
+}
+
+function dateSep(s) {
+  if (!s) return '';
+  try {
+    const d = new Date((s.endsWith('Z') ? s : s + 'Z'));
+    const pkt = new Date(d.getTime() + 5*3600000);
+    return pkt.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric',timeZone:'UTC'});
+  } catch(_){ return ''; }
+}
+
+// ─── Auth tabs ────────────────────────────────────────────────────────────────
+
+function showAuthTab(tab, btn) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('resetForm').style.display = tab === 'reset' ? 'block' : 'none';
+}
+
+// ─── Login ───────────────────────────────────────────────────────────────────
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const url = document.getElementById('apiUrl').value.trim().replace(/\/+$/,'');
+  if (!email || !password) { showErr('loginErr','Please fill in all fields'); return; }
+  API = url;
+  try {
+    const r = await fetch(API + '/api/v1/counselor/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password })
+    });
+    if (!r.ok) {
+      const e = await r.json();
+      showErr('loginErr', e.detail || 'Invalid email or password');
+      return;
+    }
+    ME = await r.json();
+    document.getElementById('authWrap').style.display = 'none';
+    document.getElementById('app').classList.add('show');
+    document.getElementById('meAvatar').textContent = ME.avatar_emoji || ME.name[0];
+    document.getElementById('meName').textContent = ME.name;
+    document.getElementById('meRoleLabel').textContent = ME.role === 'legal' ? '⚖️ Legal Advisor' : ME.role === 'admin' ? '🛡 Admin' : '💙 Counselor';
+    document.getElementById('profileAvatar').textContent = ME.avatar_emoji || ME.name[0];
+    document.getElementById('profileName').textContent = ME.name;
+    document.getElementById('profileEmail').textContent = ME.email;
+    document.getElementById('profileRole').textContent = ME.role;
+    if (ME.role === 'admin') document.getElementById('teamSection').style.display = 'block';
+    init();
+  } catch(e) {
+    showErr('loginErr','Connection error. Check API URL.');
+  }
+}
+
+async function doResetPassword() {
+  const token = document.getElementById('resetToken').value.trim();
+  const np = document.getElementById('resetNewPass').value;
+  const cp = document.getElementById('resetConfirmPass').value;
+  if (!token || !np || !cp) { showErr('resetErr','Please fill all fields'); return; }
+  if (np !== cp) { showErr('resetErr','Passwords do not match'); return; }
+  if (np.length < 8) { showErr('resetErr','Password must be at least 8 characters'); return; }
+  try {
+    const r = await fetch(API + '/api/v1/counselor/reset-password', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ reset_token: token, new_password: np })
+    });
+    const d = await r.json();
+    if (!r.ok) { showErr('resetErr', d.detail || 'Error'); return; }
+    document.getElementById('resetSuccess').style.display = 'block';
+    setTimeout(() => showAuthTab('login', document.querySelector('.auth-tab')), 2000);
+  } catch(e) { showErr('resetErr','Connection error'); }
+}
+
+function doLogout() {
+  clearInterval(POLL);
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('authWrap').style.display = 'flex';
+  ALL_CASES=[]; ACTIVE=null; ME=null; TEAM=[];
+}
+
+// ─── API helpers ──────────────────────────────────────────────────────────────
+
+async function cFetch(path, opts={}) {
+  const h = { 'Content-Type':'application/json', 'x-counselor-key': ME.access_code, ...(opts.headers||{}) };
+  const r = await fetch(API + '/api/v1/counselor' + path, { ...opts, headers:h });
+  if (!r.ok) { const t = await r.text(); throw new Error(r.status + ': ' + t); }
+  return r.json();
+}
+
+async function adminFetch(path, opts={}) {
+  const h = { 'Content-Type':'application/json', 'x-admin-key':'SafeTrace-Admin-2024', ...(opts.headers||{}) };
+  const r = await fetch(API + '/api/v1/counselor' + path, { ...opts, headers:h });
+  if (!r.ok) { const t = await r.text(); throw new Error(r.status + ': ' + t); }
+  return r.json();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+async function init() {
+  await loadTeam();
+  await loadCases();
+  setStatus(true);
+  POLL = setInterval(async () => {
+    await loadCases();
+    if (ACTIVE) await refreshMsgs(true);
+  }, 20000);
+}
+
+function setStatus(ok) {
+  document.getElementById('statusDot').className = 'dot ' + (ok?'dot-green':'dot-red');
+  document.getElementById('statusText').textContent = ok ? 'Connected · PKT' : 'Connection issue';
+}
+
+// ─── Team ─────────────────────────────────────────────────────────────────────
+
+async function loadTeam() {
+  try {
+    const d = await cFetch('/team');
+    TEAM = d.team || [];
+    populateSelects();
+    if (ME.role === 'admin') renderTeamList();
+  } catch(e) { console.warn('Team load error:', e); }
+}
+
+function populateSelects() {
+  const opts = TEAM.map(m =>
+    `<option value="${m.counselor_id}">${m.avatar_emoji||'👤'} ${m.name}${!m.is_available?' (unavailable)':''}</option>`
+  ).join('');
+  ['assignSelect','handoffSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">Select team member...</option>' + opts;
+  });
+}
+
+function renderTeamList() {
+  const el = document.getElementById('teamList');
+  if (!TEAM.length) { el.innerHTML = '<div class="empty-list">No team members yet</div>'; return; }
+  el.innerHTML = TEAM.map(m => `
+    <div class="team-member-row">
+      <div class="tm-avatar">${m.avatar_emoji||'👤'}</div>
+      <div class="tm-info">
+        <div class="tm-name">${esc(m.name)} <span class="tag tag-cat" style="font-size:10px">${m.role}</span></div>
+        <div class="tm-email">${esc(m.email||'—')}</div>
+      </div>
+      <div class="tm-actions">
+        <button class="btn btn-sm btn-orange" onclick="generateReset('${m.counselor_id}','${esc(m.name)}')">🔑 Reset pw</button>
+        <button class="btn btn-sm btn-red" onclick="removeMember('${m.counselor_id}','${esc(m.name)}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// ─── Cases ────────────────────────────────────────────────────────────────────
+
+async function loadCases() {
+  const chatType = ME?.role === 'legal' ? 'legal' : 'counselor';
+  try {
+    const d = await cFetch('/cases?chat_type=' + chatType);
+    ALL_CASES = d.cases || [];
+    renderList(ALL_CASES);
+    setStatus(true);
+  } catch(e) {
+    setStatus(false);
+    document.getElementById('convList').innerHTML = '<div class="empty-list">Could not load cases</div>';
+  }
+}
+
+function renderList(cases) {
+  const el = document.getElementById('convList');
+  const sorted = [...cases].sort((a,b) => {
+    if (a.needs_reply && !b.needs_reply) return -1;
+    if (!a.needs_reply && b.needs_reply) return 1;
+    const at = a.last_message?.timestamp || a.created_at;
+    const bt = b.last_message?.timestamp || b.created_at;
+    return new Date(bt) - new Date(at);
+  });
+  if (!sorted.length) { el.innerHTML = '<div class="empty-list">No cases yet</div>'; return; }
+  el.innerHTML = sorted.map(c => {
+    const isActive = ACTIVE?.case_id === c.case_id;
+    const preview = c.last_message
+      ? (c.last_message.sender_name||c.last_message.sender_type) + ': ' + c.last_message.content.substring(0,50)
+      : 'No messages yet';
+    return `<div class="conv-item ${isActive?'active':''}" onclick="openCase('${c.case_id}')">
+      <div class="conv-header">
+        <span class="conv-name">${esc(c.title||'Untitled')}</span>
+        <span class="conv-time">${toPKT(c.last_message?.timestamp||c.created_at)}</span>
+      </div>
+      <div class="conv-preview">${esc(preview)}</div>
+      <div class="conv-footer">
+        <span class="tag tag-cat">${c.category}</span>
+        ${c.assigned_counselor_name ? `<span class="tag tag-assigned">👤 ${esc(c.assigned_counselor_name)}</span>` : '<span class="tag tag-unassigned">⚠️ Unassigned</span>'}
+        ${c.needs_reply ? '<span class="tag tag-needs">Needs reply</span><span class="unread-dot"></span>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterList(q) {
+  document.querySelectorAll('.conv-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+// ─── Open case ────────────────────────────────────────────────────────────────
+
+async function openCase(caseId) {
+  showChat();
+  ACTIVE = ALL_CASES.find(c => c.case_id === caseId) || { case_id: caseId };
+  document.getElementById('noChat').style.display = 'none';
+  document.getElementById('chatWrap').classList.add('show');
+  document.getElementById('chatTitle').textContent = ACTIVE.title || 'Untitled Case';
+  document.getElementById('chatMeta').textContent = `${caseId} · ${ACTIVE.category||'unknown'} · ${ACTIVE.incident_count||0} incidents · PKT`;
+
+  const assignedName = ACTIVE.assigned_counselor_name;
+  const assignedId = ACTIVE.assigned_counselor_id;
+  const isMe = assignedId === ME?.counselor_id;
+  const bar = document.getElementById('assignBar');
+  const info = document.getElementById('assignInfo');
+  const selfBtn = document.getElementById('selfBtn');
+  const handoffBtn = document.getElementById('handoffBtn');
+  const assignBtn = document.getElementById('assignBtn');
+
+  if (assignedName) {
+    bar.className = isMe ? 'assign-bar mine' : 'assign-bar assigned';
+    info.textContent = isMe ? `🟢 You are assigned · ${ACTIVE.counselor_available!==false?'Available':'Unavailable'}` : `👤 ${assignedName} is assigned`;
+    selfBtn.style.display = isMe ? 'none' : 'inline-flex';
+    selfBtn.textContent = 'Take over';
+    handoffBtn.style.display = isMe ? 'inline-flex' : 'none';
+    assignBtn.textContent = '✏️ Reassign';
+  } else {
+    bar.className = 'assign-bar unassigned';
+    info.textContent = '⚠️ No counselor assigned to this case yet';
+    selfBtn.style.display = 'inline-flex';
+    selfBtn.textContent = 'Assign to me';
+    handoffBtn.style.display = 'none';
+    assignBtn.textContent = '👤 Assign';
+  }
+
+  const hBar = document.getElementById('handoffBar');
+  if (ACTIVE.handoff_note) {
+    hBar.className = 'handoff-bar show';
+    hBar.innerHTML = '📋 <strong>Handoff note:</strong> ' + esc(ACTIVE.handoff_note);
+  } else { hBar.className = 'handoff-bar'; }
+
+  document.querySelectorAll('.conv-item').forEach(el => {
+    el.classList.toggle('active', (el.getAttribute('onclick')||'').includes(caseId));
+  });
+
+  await loadMessages(caseId);
+}
+
+async function loadMessages(caseId) {
+  const el = document.getElementById('messages');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+  const chatType = ME?.role === 'legal' ? 'legal' : 'counselor';
+  try {
+    const d = await cFetch('/history/' + caseId + '?chat_type=' + chatType + '&include_internal=true');
+    renderMessages(d.messages || []);
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#c62828;font-size:12px">Could not load messages</div>';
+  }
+}
+
+function renderMessages(msgs) {
+  const el = document.getElementById('messages');
+  if (!msgs.length) {
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:#9090a8">
+      <div style="font-size:30px;margin-bottom:10px">👋</div>
+      <div style="font-size:14px;font-weight:500">No messages yet</div>
+      <div style="font-size:12px;margin-top:4px">Send a greeting to start supporting this user</div>
+    </div>`;
+    return;
+  }
+  let html = '';
+  let lastDate = '';
+  msgs.forEach(m => {
+    const md = dateSep(m.timestamp);
+    if (md !== lastDate) {
+      html += `<div class="date-sep"><span>${md} · Pakistan Time</span></div>`;
+      lastDate = md;
+    }
+    const isSys = m.sender_type === 'system';
+    const isInternal = m.is_internal_note;
+    const isUser = m.sender_type === 'user';
+    const isMe = !isUser && !isSys;
+    const senderLabel = m.sender_name || (isUser ? 'Anonymous User' : m.sender_type);
+    if (isSys) {
+      html += `<div class="system-wrap"><div class="bubble system-b">${esc(m.content)}</div><div class="msg-time" style="text-align:center">${toPKT(m.timestamp)}</div></div>`;
+    } else if (isInternal) {
+      html += `<div class="system-wrap" style="max-width:90%"><div class="bubble note-b">${esc(m.content)}</div><div class="msg-time" style="text-align:center">${senderLabel} · ${toPKT(m.timestamp)}</div></div>`;
+    } else {
+      html += `<div class="msg-wrap ${isMe?'from-me':'from-them'}">
+        <div class="msg-sender">${isMe ? senderLabel : 'Anonymous User'}</div>
+        <div class="bubble ${isMe?'from-me':'from-them'}">${esc(m.content).replace(/\n/g,'<br>')}</div>
+        <div class="msg-time">${toPKT(m.timestamp)}</div>
+      </div>`;
+    }
+  });
+  el.innerHTML = html;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function refreshMsgs(silent=false) {
+  if (!ACTIVE) return;
+  if (!silent) document.getElementById('messages').innerHTML = '<div class="loading"><div class="spinner"></div>Refreshing...</div>';
+  await loadMessages(ACTIVE.case_id);
+}
+
+// ─── Send ─────────────────────────────────────────────────────────────────────
+
+function setMode(mode, btn) {
+  INPUT_MODE = mode;
+  document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('textInputArea').style.display = mode==='voice' ? 'none' : 'block';
+  document.getElementById('voiceInputArea').style.display = mode==='voice' ? 'block' : 'none';
+  const ta = document.getElementById('msgInput');
+  ta.placeholder = mode==='note' ? '🔒 Internal note — only your team sees this...' : 'Type your reply to the user...';
+  ta.style.background = mode==='note' ? '#fffde7' : 'transparent';
+}
+
+async function sendMsg() {
+  const content = document.getElementById('msgInput').value.trim();
+  if (!content || !ACTIVE) return;
+  document.getElementById('sendBtn').disabled = true;
+  const chatType = ME?.role === 'legal' ? 'legal' : 'counselor';
+  try {
+    await cFetch('/send', {
+      method:'POST',
+      body: JSON.stringify({ case_id:ACTIVE.case_id, content, chat_type:chatType, is_internal:INPUT_MODE==='note' })
+    });
+    document.getElementById('msgInput').value = '';
+    document.getElementById('msgInput').style.height = 'auto';
+    await loadMessages(ACTIVE.case_id);
+    await loadCases();
+  } catch(e) { alert('Could not send. Try again.'); }
+  finally { document.getElementById('sendBtn').disabled=false; document.getElementById('msgInput').focus(); }
+}
+
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+
+// ─── Voice ────────────────────────────────────────────────────────────────────
+
+async function toggleVoice() {
+  if (isRecording) {
+    mediaRecorder?.stop(); isRecording=false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+    document.getElementById('voiceBtn').textContent='🎙️';
+    document.getElementById('voiceStatus').textContent='Recording ready';
+    document.getElementById('sendVoiceBtn').style.display='inline-flex';
+  } else {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      audioChunks=[];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => stream.getTracks().forEach(t=>t.stop());
+      mediaRecorder.start(); isRecording=true;
+      document.getElementById('voiceBtn').classList.add('recording');
+      document.getElementById('voiceBtn').textContent='⏹️';
+      document.getElementById('voiceStatus').textContent='Recording... tap to stop';
+      document.getElementById('sendVoiceBtn').style.display='none';
+    } catch(e) { alert('Microphone access denied.'); }
+  }
+}
+
+function sendVoice() {
+  alert('Voice note recorded!\n\nVoice note upload is coming in the next update. Please type your message for now.');
+  audioChunks=[]; document.getElementById('sendVoiceBtn').style.display='none';
+  document.getElementById('voiceStatus').textContent='Tap mic to record';
+  document.getElementById('voiceBtn').textContent='🎙️';
+}
+
+// ─── Assignment ───────────────────────────────────────────────────────────────
+
+function showAssignModal() { loadTeam().then(populateSelects); document.getElementById('assignModal').style.display='flex'; }
+
+async function doAssign() {
+  const id = document.getElementById('assignSelect').value;
+  if (!id) { alert('Select a team member'); return; }
+  const chatType = ME?.role==='legal'?'legal':'counselor';
+  try {
+    await cFetch('/assign',{method:'POST',body:JSON.stringify({case_id:ACTIVE.case_id,counselor_id:id,chat_type:chatType})});
+    closeModal('assignModal'); await loadCases(); await openCase(ACTIVE.case_id); await refreshMsgs();
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+async function assignMyself() {
+  const chatType = ME?.role==='legal'?'legal':'counselor';
+  try {
+    await cFetch('/assign',{method:'POST',body:JSON.stringify({case_id:ACTIVE.case_id,counselor_id:ME.counselor_id,chat_type:chatType})});
+    await loadCases(); await openCase(ACTIVE.case_id); await refreshMsgs();
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+function showHandoffModal() { loadTeam().then(populateSelects); document.getElementById('handoffNote').value=''; document.getElementById('handoffModal').style.display='flex'; }
+
+async function doHandoff() {
+  const toId = document.getElementById('handoffSelect').value;
+  const note = document.getElementById('handoffNote').value.trim();
+  if (!toId||!note) { alert('Select a counselor and write a handoff note'); return; }
+  const chatType = ME?.role==='legal'?'legal':'counselor';
+  try {
+    await cFetch('/handoff',{method:'POST',body:JSON.stringify({case_id:ACTIVE.case_id,to_counselor_id:toId,handoff_note:note,chat_type:chatType})});
+    closeModal('handoffModal'); await loadCases(); await openCase(ACTIVE.case_id); await refreshMsgs();
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+// ─── Change password ──────────────────────────────────────────────────────────
+
+async function changePassword() {
+  const curr = document.getElementById('cpCurrent').value;
+  const np = document.getElementById('cpNew').value;
+  const cp = document.getElementById('cpConfirm').value;
+  if (!curr||!np||!cp) { showErr('cpErr','Fill all fields'); return; }
+  if (np!==cp) { showErr('cpErr','Passwords do not match'); return; }
+  if (np.length<8) { showErr('cpErr','Min 8 characters'); return; }
+  try {
+    await cFetch('/change-password',{method:'POST',body:JSON.stringify({current_password:curr,new_password:np})});
+    document.getElementById('cpSuccess').style.display='block';
+    document.getElementById('cpErr').style.display='none';
+    document.getElementById('cpCurrent').value='';
+    document.getElementById('cpNew').value='';
+    document.getElementById('cpConfirm').value='';
+  } catch(e) { showErr('cpErr','Current password incorrect'); }
+}
+
+// ─── Team management (admin) ─────────────────────────────────────────────────
+
+function showAddCounselorModal() { document.getElementById('addErr').style.display='none'; document.getElementById('addCounselorModal').style.display='flex'; }
+
+async function doAddCounselor() {
+  const name = document.getElementById('newName').value.trim();
+  const email = document.getElementById('newEmail').value.trim();
+  const role = document.getElementById('newRole').value;
+  const emoji = document.getElementById('newEmoji').value || '👤';
+  const password = document.getElementById('newPassword').value;
+  if (!name||!email||!password) { showErr('addErr','Fill all required fields'); return; }
+  if (password.length<8) { showErr('addErr','Password must be at least 8 characters'); return; }
+  try {
+    const d = await adminFetch('/team/add',{method:'POST',body:JSON.stringify({name,email,role,avatar_emoji:emoji,password})});
+    alert(`✅ ${name} added!\n\nShare these login details:\nEmail: ${email}\nPassword: (what you set)\nLogin at: akbani89.github.io/safetrace-counselor`);
+    closeModal('addCounselorModal');
+    await loadTeam();
+  } catch(e) { showErr('addErr',e.message); }
+}
+
+async function generateReset(counselorId, name) {
+  try {
+    const d = await adminFetch('/team/'+counselorId+'/reset-password',{method:'POST'});
+    document.getElementById('resetTokenInfo').textContent = `Share this reset token with ${name}. Expires in 24 hours. They use it on the Login page → Reset Password tab.`;
+    document.getElementById('resetTokenDisplay').textContent = d.reset_token;
+    document.getElementById('resetTokenModal').style.display='flex';
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+function copyToken() {
+  const token = document.getElementById('resetTokenDisplay').textContent;
+  navigator.clipboard.writeText(token).then(() => alert('Token copied!'));
+}
+
+async function removeMember(id, name) {
+  if (!confirm(`Remove ${name} from the team? They will no longer be able to log in.`)) return;
+  try {
+    await adminFetch('/team/'+id,{method:'DELETE'});
+    await loadTeam();
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+// ─── UI helpers ───────────────────────────────────────────────────────────────
+
+function showProfile() {
+  document.getElementById('chatWrap').classList.remove('show');
+  document.getElementById('noChat').style.display='none';
+  document.getElementById('profilePanel').classList.add('show');
+  if (ME.role==='admin') { loadTeam(); }
+}
+
+function showChat() {
+  document.getElementById('profilePanel').classList.remove('show');
+  if (ACTIVE) { document.getElementById('chatWrap').classList.add('show'); }
+  else { document.getElementById('noChat').style.display='flex'; }
+}
+
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+function showErr(id, msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; setTimeout(()=>el.style.display='none',4000); }
+
+function esc(t) {
+  if (!t) return '';
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Enter' && document.getElementById('authWrap').style.display!=='none') doLogin();
+});
+</script>
+</body>
+</html>
